@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -610,8 +609,10 @@ elif page == "🧍 Start Screening":
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Vital Signs
-        st.markdown('<div class="form-section">', unsafe_allow_html=True)
-        st.markdown("### 🩺 Vital Signs")
+        st.markdown("""
+        <div class="form-section">
+            <h3 style="margin-top: 0; color: #2c3e50;">🩺 Vital Signs</h3>
+        """, unsafe_allow_html=True)
 
         col1, col2, col3, col4 = st.columns(4)
 
@@ -634,8 +635,10 @@ elif page == "🧍 Start Screening":
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Lifestyle Factors
-        st.markdown('<div class="form-section">', unsafe_allow_html=True)
-        st.markdown("### 🚬 Lifestyle Factors")
+        st.markdown("""
+        <div class="form-section">
+            <h3 style="margin-top: 0; color: #2c3e50;">🚬 Lifestyle Factors</h3>
+        """, unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
 
@@ -656,8 +659,10 @@ elif page == "🧍 Start Screening":
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Family History
-        st.markdown('<div class="form-section">', unsafe_allow_html=True)
-        st.markdown("### 👨‍👩‍👧‍👦 Family History")
+        st.markdown("""
+        <div class="form-section">
+            <h3 style="margin-top: 0; color: #2c3e50;">👨‍👩‍👧‍👦 Family History</h3>
+        """, unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns(3)
 
@@ -673,8 +678,10 @@ elif page == "🧍 Start Screening":
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Symptoms
-        st.markdown('<div class="form-section">', unsafe_allow_html=True)
-        st.markdown("### 🩺 Symptoms")
+        st.markdown("""
+        <div class="form-section">
+            <h3 style="margin-top: 0; color: #2c3e50;">🩺 Symptoms</h3>
+        """, unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns(3)
 
