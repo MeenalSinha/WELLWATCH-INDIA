@@ -36,7 +36,7 @@ st.markdown("""
 
     /* Hero section */
     .hero-title {
-        font-size: 3.5rem;
+        font-size: 4.5rem;  /* Changed from 3.5rem */
         color: #2c3e50;
         text-align: center;
         font-weight: 800;
@@ -48,7 +48,7 @@ st.markdown("""
     }
 
     .hero-subtitle {
-        font-size: 1.3rem;
+        font-size: 1.5rem;  /* Changed from 1.3rem */
         color: #7f8c8d;
         text-align: center;
         margin-bottom: 2rem;
