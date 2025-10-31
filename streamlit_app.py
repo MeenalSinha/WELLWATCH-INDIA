@@ -424,7 +424,7 @@ with st.sidebar:
 
 if page == "🏠 Home":
     # Hero section
-    st.markdown('<p class="hero-title">🩺 WellWatch India</p>', unsafe_allow_html=True)
+    st.markdown('<p class="hero-title" style="font-size: 4.5rem;">🩺 WellWatch India</p>', unsafe_allow_html=True)
     st.markdown('<p class="hero-subtitle">AI-powered community screening for early detection of lifestyle diseases</p>', unsafe_allow_html=True)
 
     # Key metrics
