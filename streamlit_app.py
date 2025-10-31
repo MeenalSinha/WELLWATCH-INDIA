@@ -577,7 +577,7 @@ if page == "🏠 Home":
 # ================================================================================
 
 elif page == "🧍 Start Screening":
-    st.markdown('<p class="hero-title">🧍 Patient Risk Assessment</p>', unsafe_allow_html=True)
+    st.markdown('<p class="hero-title" style="font-size: 4.5rem;">🧍 Patient Risk Assessment</p>', unsafe_allow_html=True)
     st.markdown('<p class="hero-subtitle">Complete screening form for chronic disease risk evaluation</p>', unsafe_allow_html=True)
 
     with st.form("screening_form"):
@@ -851,7 +851,7 @@ elif page == "🧍 Start Screening":
 # ================================================================================
 
 elif page == "📊 Community Dashboard":
-    st.markdown('<p class="hero-title">📊 Community Health Dashboard</p>', unsafe_allow_html=True)
+    st.markdown('<p class="hero-title" style="font-size: 4.5rem;">📊 Community Health Dashboard</p>', unsafe_allow_html=True)
     st.markdown('<p class="hero-subtitle">Real-time analytics and population health insights</p>', unsafe_allow_html=True)
 
     # Generate sample data for visualization
@@ -1062,7 +1062,7 @@ elif page == "📊 Community Dashboard":
 # ================================================================================
 
 elif page == "🔍 Explainability":
-    st.markdown('<p class="hero-title">🔍 Model Explainability & Fairness</p>', unsafe_allow_html=True)
+    st.markdown('<p class="hero-title" style="font-size: 4.5rem;">🔍 Model Explainability & Fairness</p>', unsafe_allow_html=True)
     st.markdown('<p class="hero-subtitle">Understanding how the AI makes predictions</p>', unsafe_allow_html=True)
 
     # Feature importance
@@ -1197,7 +1197,7 @@ elif page == "🔍 Explainability":
 # ================================================================================
 
 elif page == "👤 Judge Mode":
-    st.markdown('<p class="hero-title">👤 Judge Demonstration Mode</p>', unsafe_allow_html=True)
+    st.markdown('<p class="hero-title" style="font-size: 4.5rem;">👤 Judge Demonstration Mode</p>', unsafe_allow_html=True)
     st.markdown('<p class="hero-subtitle">One-click demo showing predictions across all risk categories</p>', unsafe_allow_html=True)
 
     st.markdown("""
@@ -1409,7 +1409,7 @@ elif page == "👤 Judge Mode":
 # ================================================================================
 
 elif page == "📂 Admin Panel":
-    st.markdown('<p class="hero-title">📂 Admin Panel</p>', unsafe_allow_html=True)
+    st.markdown('<p class="hero-title" style="font-size: 4.5rem;">📂 Admin Panel</p>', unsafe_allow_html=True)
     st.markdown('<p class="hero-subtitle">Database management and data export tools</p>', unsafe_allow_html=True)
 
     # Tabs for different admin functions
@@ -1632,7 +1632,7 @@ elif page == "📂 Admin Panel":
 # ================================================================================
 
 elif page == "ℹ️ About & Help":
-    st.markdown('<p class="hero-title">ℹ️ About WellWatch India</p>', unsafe_allow_html=True)
+    st.markdown('<p class="hero-title" style="font-size: 4.5rem;">ℹ️ About WellWatch India</p>', unsafe_allow_html=True)
     st.markdown('<p class="hero-subtitle">Empowering community health through AI-driven screening</p>', unsafe_allow_html=True)
 
     # Mission & Vision
