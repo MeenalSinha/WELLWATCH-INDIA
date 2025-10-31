@@ -582,8 +582,10 @@ elif page == "🧍 Start Screening":
 
     with st.form("screening_form"):
         # Personal Information
-        st.markdown('<div class="form-section">', unsafe_allow_html=True)
-        st.markdown("### 👤 Personal Information")
+        st.markdown("""
+        <div class="form-section">
+            <h3 style="margin-top: 0; color: #2c3e50;">👤 Personal Information</h3>
+        """, unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns(3)
 
