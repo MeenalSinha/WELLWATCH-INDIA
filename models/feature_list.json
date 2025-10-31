@@ -1,0 +1,32 @@
+{
+  "features": [
+    "age",
+    "bmi",
+    "systolic_bp",
+    "diastolic_bp",
+    "pulse_rate",
+    "fasting_glucose",
+    "smoking",
+    "alcohol",
+    "family_diabetes",
+    "family_hypertension",
+    "family_heart_disease",
+    "fatigue",
+    "breathlessness",
+    "chest_pain",
+    "frequent_urination",
+    "blurred_vision",
+    "gender_encoded",
+    "location_encoded",
+    "activity_encoded",
+    "diet_encoded",
+    "high_bp_flag",
+    "high_glucose_flag",
+    "overweight_flag",
+    "elderly_flag",
+    "bp_glucose_risk",
+    "family_risk_score",
+    "lifestyle_risk_score",
+    "symptom_count"
+  ]
+}

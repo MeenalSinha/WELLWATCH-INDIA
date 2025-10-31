@@ -1,0 +1,16 @@
+Metric,Value
+Overall Accuracy,0.7280 (72.80%)
+Weighted Precision,0.7416
+Weighted Recall,0.7280
+Weighted F1 Score,0.7236
+Low Risk - Precision,0.8462
+Low Risk - Recall,0.4314
+Medium Risk - Precision,0.7875
+Medium Risk - Recall,0.7500
+High Risk - Precision,0.6682
+High Risk - Recall,0.7921
+Training Samples,1585
+Test Samples,397
+Number of Features,28
+Model Type,XGBoost Classifier
+Training Time (est.),~30 seconds

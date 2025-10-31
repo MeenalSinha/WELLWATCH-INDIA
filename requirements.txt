@@ -1,0 +1,13 @@
+# WellWatch India - Requirements
+scikit-learn
+xgboost
+pandas
+numpy
+matplotlib
+seaborn
+plotly
+shap
+fpdf
+streamlit
+joblib
+pyngrok

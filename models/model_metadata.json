@@ -1,0 +1,13 @@
+{
+  "model_type": "XGBoost Classifier",
+  "training_date": "2025-10-31 05:02:28",
+  "n_features": 28,
+  "n_samples_train": 1585,
+  "n_samples_test": 397,
+  "accuracy": 0.7279596977329975,
+  "precision": 0.7415660288474165,
+  "recall": 0.7279596977329975,
+  "f1_score": 0.7235631946747493,
+  "random_seed": 42,
+  "model_version": "1.0"
+}
