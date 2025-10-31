@@ -388,6 +388,11 @@ with st.sidebar:
         label_visibility="visible"
     )
 
+    # Check for page override from buttons
+    if 'page_override' in st.session_state:
+        page = st.session_state.page_override
+        del st.session_state.page_override
+
     st.markdown("---")
 
     # Offline mode toggle
