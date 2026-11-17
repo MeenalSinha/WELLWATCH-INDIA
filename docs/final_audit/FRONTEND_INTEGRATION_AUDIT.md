@@ -27,7 +27,8 @@ The frontend was audited to ensure full end-to-end integration with the FastAPI 
 
 ---
 
-## 3. Form Validation & Error Handling
+## 3. Form Validation, Static Optimization & Error Handling
 - All API requests use typed `apiClient` with automatic Bearer token injection and `X-Correlation-ID` extraction.
 - HTTP error responses display clear user-facing messages rather than crashing the interface.
 - Complete TypeScript type coverage in `frontend/src/types/index.ts` with 0 type errors.
+- **Next.js Static Prerender Compliance:** Client components using `useSearchParams()` (`/assessments`) are wrapped in explicit React `<Suspense>` boundaries to guarantee zero-bailout static page generation during production build (`next build`).

@@ -141,20 +141,10 @@ export interface PersonCreate {
   emirate?: string;
   district?: string;
   organization_id?: string;
-  identifier_namespace?: string;
-  identifier_value?: string;
+  emirates_id?: string;
+  mrn?: string;
   guardian_user_id?: string;
   relationship_to_guardian?: string;
-}
-
-export interface ObservationCreate {
-  observation_type: string;
-  code: string;
-  display_name: string;
-  numeric_value?: number;
-  unit?: string;
-  string_value?: string;
-  collection_time?: string;
 }
 
 export interface TimelineEvent {
@@ -273,28 +263,25 @@ export type AssessmentStatus = 'COMPLETED' | 'REQUIRES_REVIEW' | 'NEEDS_DATA' | 
 export type HumanReviewStatus = 'NOT_REQUIRED' | 'AWAITING_REVIEW' | 'UNDER_REVIEW' | 'APPROVED' | 'MODIFIED' | 'REJECTED';
 
 export interface PreventiveAssessmentResponse {
-  id?: string;
-  assessment_id?: string;
+  id: string;
   patient_id: string;
-  assessment_type?: string;
+  assessment_type: string;
   population_category: string;
   pathway_id: string;
   pathway_version: string;
   assessment_status: AssessmentStatus;
   clinical_risk_tier: ClinicalRiskTier;
-  eligibility_summary?: string;
-  care_gaps_summary?: string;
-  contributing_factors?: any;
-  data_quality_limitations?: any;
-  eligibility?: any;
-  care_gaps?: any;
+  eligibility_summary: string;
+  care_gaps_summary: string;
+  contributing_factors: string;
+  data_quality_limitations: string;
   human_review_status: HumanReviewStatus;
   reviewed_by_user_id?: string;
   reviewed_at?: string;
   reviewer_notes?: string;
   recommended_action: string;
   created_at: string;
-  updated_at?: string;
+  updated_at: string;
 }
 
 // ==========================================

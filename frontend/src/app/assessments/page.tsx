@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import { PersonSummary, PreventiveAssessmentResponse } from '@/types';
 import { getStoredUser } from '@/lib/auth';
 
-export default function AssessmentsPage() {
+function AssessmentsContent() {
   const searchParams = useSearchParams();
   const queryAssessmentId = searchParams.get('id');
 
@@ -374,5 +374,13 @@ export default function AssessmentsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AssessmentsPage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-slate-400">Loading assessments...</div>}>
+      <AssessmentsContent />
+    </Suspense>
   );
 }
