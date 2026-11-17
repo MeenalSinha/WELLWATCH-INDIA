@@ -23,14 +23,14 @@ export const Navbar: React.FC = () => {
   };
 
   const navLinks = [
-    { href: '/', label: 'Overview' },
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/patients', label: 'Patients' },
     { href: '/pathways', label: 'Pathways' },
     { href: '/assessments', label: 'Risk Assessments' },
-    { href: '/screening', label: 'Record Vitals' },
-    { href: '/consent', label: 'Consent' },
-    { href: '/audit', label: 'Audit' },
+    { href: '/recommendations', label: 'Recommendations' },
+    { href: '/care-plans', label: 'Care Plans' },
+    { href: '/outreach', label: 'Outreach & RTL' },
+    { href: '/navigation', label: 'Care Navigation' },
   ];
 
   return (

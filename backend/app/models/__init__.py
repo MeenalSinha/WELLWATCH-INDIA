@@ -40,7 +40,6 @@ from backend.app.models.clinical import (
     FamilyRelationship,
     ScreeningStatus,
 )
-
 from backend.app.models.assessment import (
     PreventiveAssessment,
     AssessmentStatus,
@@ -51,6 +50,35 @@ from backend.app.models.genomics import (
     GenomicFinding,
     VariantClassification,
     GenomicReviewStatus,
+)
+# Phase 9: Recommendations & Care Plans
+from backend.app.models.recommendation import (
+    PreventiveRecommendation,
+    RecommendationReview,
+    PreventiveCarePlan,
+    CarePlanItem,
+    RecommendationCategory,
+    RecommendationPriority,
+    RecommendationLifecycleStatus,
+)
+# Phase 10: Cultural Outreach
+from backend.app.models.outreach import (
+    CommunicationPreference,
+    OutreachTask,
+    CommunicationChannel,
+    OutreachDeliveryStatus,
+)
+# Phase 11: Care Navigation
+from backend.app.models.navigation import (
+    Appointment,
+    Referral,
+    FollowUpTask,
+    RecallTask,
+    CareGapClosureEvidence,
+    AppointmentStatus,
+    ReferralStatus,
+    FollowUpStatus,
+    RecallStatus,
 )
 
 __all__ = [
@@ -110,4 +138,27 @@ __all__ = [
     "ConditionVerificationStatus",
     "FamilyRelationship",
     "ScreeningStatus",
+    # Phase 9
+    "PreventiveRecommendation",
+    "RecommendationReview",
+    "PreventiveCarePlan",
+    "CarePlanItem",
+    "RecommendationCategory",
+    "RecommendationPriority",
+    "RecommendationLifecycleStatus",
+    # Phase 10
+    "CommunicationPreference",
+    "OutreachTask",
+    "CommunicationChannel",
+    "OutreachDeliveryStatus",
+    # Phase 11
+    "Appointment",
+    "Referral",
+    "FollowUpTask",
+    "RecallTask",
+    "CareGapClosureEvidence",
+    "AppointmentStatus",
+    "ReferralStatus",
+    "FollowUpStatus",
+    "RecallStatus",
 ]

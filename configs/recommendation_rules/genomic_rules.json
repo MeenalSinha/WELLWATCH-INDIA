@@ -1,0 +1,38 @@
+{
+  "registry_version": "1.0.0",
+  "governance_body": "Emirati Genome Program (EGP) & DoH Genomics Committee",
+  "rules": [
+    {
+      "rule_id": "REC-GEN-001",
+      "rule_version": "1.0.0",
+      "category": "GENOMIC_COUNSELING",
+      "pathway_id": "genomic_secondary_findings",
+      "applicable_population": "all",
+      "trigger_condition": {
+        "care_gap_code": "GAP-GENOMIC-COUNSELING-DUE"
+      },
+      "default_priority": "CRITICAL",
+      "recommended_action": "Refer to certified Medical Geneticist or Genetic Counselor for secondary finding disclosure",
+      "clinical_rationale": "Pathogenic genomic variant in ACMG SF v3.2 actionable gene requires certified counselor disclosure and cascade testing plan.",
+      "source_guideline": "ACMG SF v3.2 & Emirati Genome Program Actionability Framework",
+      "recommended_window_days": 7,
+      "requires_human_review": true
+    },
+    {
+      "rule_id": "REC-GEN-002",
+      "rule_version": "1.0.0",
+      "category": "SPECIALIST_REFERRAL",
+      "pathway_id": "genomic_secondary_findings",
+      "applicable_population": "all",
+      "trigger_condition": {
+        "care_gap_code": "GAP-LIPID-SPECIALIST-EVALUATION"
+      },
+      "default_priority": "HIGH",
+      "recommended_action": "Schedule specialized preventive cardiology and lipid management consultation",
+      "clinical_rationale": "Familial Hypercholesterolemia (LDLR pathogenic variant) requires aggressive early lipid-lowering therapy and coronary plaque screening.",
+      "source_guideline": "DoH Dyslipidemia & Familial Hypercholesterolemia Management Protocol",
+      "recommended_window_days": 14,
+      "requires_human_review": true
+    }
+  ]
+}

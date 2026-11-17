@@ -17,6 +17,23 @@ import {
   TimelineResponse,
   TokenResponse,
   User,
+  // Phase 9
+  PreventiveRecommendationResponse,
+  RecommendationListResponse,
+  RecommendationExplanation,
+  CarePlanResponse,
+  // Phase 10
+  CommunicationPreferenceResponse,
+  OutreachTaskResponse,
+  OutreachTaskListResponse,
+  OutreachAnalyticsResponse,
+  TemplatePreviewResponse,
+  // Phase 11
+  AppointmentResponse,
+  ReferralResponse,
+  FollowUpTaskResponse,
+  CareGapClosureResponse,
+  NavigationAnalyticsResponse,
 } from '@/types';
 import { getStoredToken } from './auth';
 
@@ -37,52 +54,53 @@ export class ApiError extends Error {
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = getStoredToken();
-  const headers = new Headers(options.headers || {});
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
 
-  headers.set('Content-Type', 'application/json');
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const url = `${API_BASE_URL}${endpoint}`;
-  try {
-    const res = await fetch(url, {
-      ...options,
-      headers,
-    });
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
 
-    const correlationId = res.headers.get('X-Correlation-ID') || undefined;
+  const correlationId = response.headers.get('x-correlation-id') || undefined;
 
-    if (!res.ok) {
-      let errorMsg = `HTTP Error ${res.status}`;
-      let errorCode = 'REQUEST_FAILED';
-      try {
-        const errJson = await res.json();
-        if (errJson.error) {
-          errorMsg = errJson.error.message || errorMsg;
-          errorCode = errJson.error.code || errorCode;
-        } else if (errJson.detail) {
-          errorMsg = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
-        }
-      } catch {
-        // Fallback to generic message
+  if (!response.ok) {
+    let errorMsg = `API Error ${response.status}: ${response.statusText}`;
+    let errorCode = 'API_ERROR';
+    try {
+      const errJson = await response.json();
+      if (errJson.error) {
+        errorMsg = errJson.error.message || errorMsg;
+        errorCode = errJson.error.code || errorCode;
+      } else if (errJson.detail) {
+        errorMsg = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
       }
-      throw new ApiError(res.status, errorMsg, errorCode, correlationId);
+    } catch {
+      // Fallback
     }
-
-    return (await res.json()) as T;
-  } catch (err: any) {
-    if (err instanceof ApiError) throw err;
-    throw new ApiError(0, err.message || 'Network connection failed. Backend service might be unreachable.');
+    throw new ApiError(response.status, errorMsg, errorCode, correlationId);
   }
+
+  if (response.status === 204) {
+    return {} as T;
+  }
+
+  return response.json();
 }
 
 export const apiClient = {
-  // Health & Readiness
+  // Health
   getHealth: () => request<HealthStatus>('/health'),
   getReadiness: () => request<{ status: string; database_ready: boolean }>('/ready'),
+  listScreenings: (organizationId?: string) => request<ScreeningEncounter[]>('/screenings'),
 
-  // Auth & Session
+  // Auth
   login: (email: string, password: string) =>
     request<TokenResponse>('/auth/login', {
       method: 'POST',
@@ -90,76 +108,54 @@ export const apiClient = {
     }),
   getMe: () => request<User>('/auth/me'),
 
-  // Screenings (Legacy & Direct Enrolment)
-  recordScreening: (data: Partial<ScreeningEncounter>) =>
-    request<ScreeningEncounter>('/screenings', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-  listScreenings: (facilityId?: string) => {
-    const qs = facilityId ? `?facility_id=${encodeURIComponent(facilityId)}` : '';
-    return request<ScreeningEncounter[]>(`/screenings${qs}`);
-  },
-
-  // Patients & Patient Intelligence (Phases 4 & 5)
-  listPatients: (classification?: string, q?: string, skip = 0, limit = 50) => {
-    const params = new URLSearchParams();
-    if (classification) params.set('classification', classification);
-    if (q) params.set('q', q);
-    params.set('skip', skip.toString());
-    params.set('limit', limit.toString());
+  // Patients (Phase 5)
+  getPatients: (page = 1, pageSize = 20, search?: string) => {
+    const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+    if (search) params.set('search', search);
     return request<PersonListResponse>(`/patients?${params.toString()}`);
   },
-  getPatient: (patientId: string) => request<PersonSummary>(`/patients/${patientId}`),
+  getPatient: (id: string) => request<PersonSummary>(`/patients/${id}`),
   registerPatient: (data: PersonCreate) =>
     request<PersonSummary>('/patients', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  getPediatricProfile: (patientId: string) =>
-    request<PediatricProfile>(`/patients/${patientId}/pediatric`),
-  getAdultProfile: (patientId: string) =>
-    request<AdultProfile>(`/patients/${patientId}/adult`),
-  getTimeline: (patientId: string) =>
-    request<TimelineResponse>(`/patients/${patientId}/timeline`),
+  getPediatricProfile: (id: string) => request<PediatricProfile>(`/patients/${id}/pediatric-profile`),
+  getAdultProfile: (id: string) => request<AdultProfile>(`/patients/${id}/adult-profile`),
+  getPatientTimeline: (id: string) => request<TimelineResponse>(`/patients/${id}/timeline`),
   recordObservation: (patientId: string, data: ObservationCreate) =>
-    request<{ success: boolean; observation_id: string; canonical_value: number; canonical_unit: string }>(
-      `/patients/${patientId}/observations`,
-      {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }
-    ),
+    request<any>(`/patients/${patientId}/observations`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   // Pathways (Phase 6)
-  listPathways: () => request<PathwaySummary[]>('/pathways'),
-  getPathway: (pathwayId: string) => request<any>(`/pathways/${pathwayId}`),
-  evaluateEligibility: (pathwayId: string, patientId: string, evalDate?: string) => {
-    const qs = evalDate ? `?eval_date=${evalDate}` : '';
-    return request<any>(`/pathways/${pathwayId}/evaluate-eligibility/${patientId}${qs}`, { method: 'POST' });
-  },
-  evaluateCareGaps: (pathwayId: string, patientId: string, evalDate?: string) => {
-    const qs = evalDate ? `?eval_date=${evalDate}` : '';
-    return request<any>(`/pathways/${pathwayId}/evaluate-care-gaps/${patientId}${qs}`, { method: 'POST' });
-  },
-  evaluateAll: (pathwayId: string, patientId: string, evalDate?: string) => {
-    const qs = evalDate ? `?eval_date=${evalDate}` : '';
-    return request<ComprehensiveEvaluation>(`/pathways/${pathwayId}/evaluate-all/${patientId}${qs}`, { method: 'POST' });
-  },
+  getPathways: () => request<PathwaySummary[]>('/pathways'),
+  getPathway: (id: string) => request<any>(`/pathways/${id}`),
+  evaluatePathway: (id: string, payload: any) =>
+    request<any>(`/pathways/${id}/evaluate`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  evaluateComprehensive: (patientId: string) =>
+    request<ComprehensiveEvaluation>(`/pathways/evaluate-patient/${patientId}`),
+  getPatientCareGaps: (patientId: string) =>
+    request<CareGapItem[]>(`/pathways/patient-gaps/${patientId}`),
 
   // Assessments (Phase 7)
-  generateAssessment: (patientId: string, pathwayId?: string, evalDate?: string) => {
-    const params = new URLSearchParams();
-    if (pathwayId) params.set('pathway_id', pathwayId);
-    if (evalDate) params.set('eval_date', evalDate);
-    const qs = params.toString() ? `?${params.toString()}` : '';
-    return request<PreventiveAssessmentResponse>(`/assessments/generate/${patientId}${qs}`, { method: 'POST' });
+  getAssessments: (patientId?: string, skip = 0, limit = 50) => {
+    const params = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+    if (patientId) params.set('patient_id', patientId);
+    return request<PreventiveAssessmentResponse[]>(`/assessments?${params.toString()}`);
   },
   getAssessment: (assessmentId: string) =>
     request<PreventiveAssessmentResponse>(`/assessments/${assessmentId}`),
-  listPatientAssessments: (patientId: string) =>
-    request<PreventiveAssessmentResponse[]>(`/assessments/patient/${patientId}`),
-  submitAssessmentReview: (assessmentId: string, reviewStatus: string, notes: string) =>
+  generateAssessment: (patientId: string, pathwayId: string, pathwayVersion: string) =>
+    request<PreventiveAssessmentResponse>('/assessments/generate', {
+      method: 'POST',
+      body: JSON.stringify({ patient_id: patientId, pathway_id: pathwayId, pathway_version: pathwayVersion }),
+    }),
+  reviewAssessment: (assessmentId: string, reviewStatus: string, notes: string) =>
     request<{ success: boolean; assessment_id: string; human_review_status: string; reviewed_at: string }>(
       `/assessments/${assessmentId}/review`,
       {
@@ -181,6 +177,131 @@ export const apiClient = {
       method: 'POST',
       body: JSON.stringify({ new_status: newStatus, notes }),
     }),
+
+  // Phase 9: Recommendations & Care Plans
+  generateRecommendations: (patientId: string) =>
+    request<PreventiveRecommendationResponse[]>(`/recommendations/generate/${patientId}`, {
+      method: 'POST',
+    }),
+  getRecommendations: (patientId?: string, status?: string, priority?: string, limit = 50, offset = 0) => {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    if (patientId) params.set('person_id', patientId);
+    if (status) params.set('status', status);
+    if (priority) params.set('priority', priority);
+    return request<RecommendationListResponse>(`/recommendations?${params.toString()}`);
+  },
+  getRecommendation: (id: string) =>
+    request<PreventiveRecommendationResponse>(`/recommendations/${id}`),
+  explainRecommendation: (id: string) =>
+    request<RecommendationExplanation>(`/recommendations/${id}/explain`),
+  reviewRecommendation: (id: string, reviewDecision: string, rationale: string, modifications?: any) =>
+    request<PreventiveRecommendationResponse>(`/recommendations/${id}/review`, {
+      method: 'POST',
+      body: JSON.stringify({ review_decision: reviewDecision, rationale, modifications }),
+    }),
+  updateRecommendationStatus: (id: string, lifecycleStatus: string, declinedReason?: string, reviewerNotes?: string) =>
+    request<PreventiveRecommendationResponse>(`/recommendations/${id}/status`, {
+      method: 'POST',
+      body: JSON.stringify({ lifecycle_status: lifecycleStatus, declined_reason: declinedReason, reviewer_notes: reviewerNotes }),
+    }),
+  createCarePlan: (payload: any) =>
+    request<CarePlanResponse>('/care-plans', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getPatientCarePlans: (patientId: string) =>
+    request<CarePlanResponse[]>(`/care-plans/patient/${patientId}`),
+
+  // Phase 10: Cultural Outreach
+  getCommunicationPreferences: (patientId: string) =>
+    request<CommunicationPreferenceResponse>(`/outreach/preferences/${patientId}`),
+  updateCommunicationPreferences: (patientId: string, payload: any) =>
+    request<CommunicationPreferenceResponse>(`/outreach/preferences/${patientId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  createOutreachTask: (payload: any) =>
+    request<OutreachTaskResponse>('/outreach/tasks', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getOutreachTasks: (patientId?: string, deliveryStatus?: string, limit = 50, offset = 0) => {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    if (patientId) params.set('person_id', patientId);
+    if (deliveryStatus) params.set('delivery_status', deliveryStatus);
+    return request<OutreachTaskListResponse>(`/outreach/tasks?${params.toString()}`);
+  },
+  retryOutreachTask: (taskId: string) =>
+    request<OutreachTaskResponse>(`/outreach/tasks/${taskId}/retry`, {
+      method: 'POST',
+    }),
+  previewTemplate: (payload: { template_id: string; language?: string; variables?: Record<string, string> }) =>
+    request<TemplatePreviewResponse>('/outreach/preview', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getOutreachAnalytics: () =>
+    request<OutreachAnalyticsResponse>('/outreach/analytics'),
+
+  // Phase 11: Care Navigation
+  bookAppointment: (payload: any) =>
+    request<AppointmentResponse>('/navigation/appointments', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getAppointments: (patientId?: string, status?: string) => {
+    const params = new URLSearchParams();
+    if (patientId) params.set('person_id', patientId);
+    if (status) params.set('status', status);
+    return request<AppointmentResponse[]>(`/navigation/appointments?${params.toString()}`);
+  },
+  updateAppointmentStatus: (id: string, status: string, attendanceNotes?: string) =>
+    request<AppointmentResponse>(`/navigation/appointments/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, attendance_notes: attendanceNotes }),
+    }),
+  createReferral: (payload: any) =>
+    request<ReferralResponse>('/navigation/referrals', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getReferrals: (patientId?: string, status?: string) => {
+    const params = new URLSearchParams();
+    if (patientId) params.set('person_id', patientId);
+    if (status) params.set('status', status);
+    return request<ReferralResponse[]>(`/navigation/referrals?${params.toString()}`);
+  },
+  updateReferralStatus: (id: string, status: string, outcomeNotes?: string) =>
+    request<ReferralResponse>(`/navigation/referrals/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, outcome_notes: outcomeNotes }),
+    }),
+  getFollowUps: (patientId?: string, status?: string) => {
+    const params = new URLSearchParams();
+    if (patientId) params.set('person_id', patientId);
+    if (status) params.set('status', status);
+    return request<FollowUpTaskResponse[]>(`/navigation/follow-ups?${params.toString()}`);
+  },
+  resolveFollowUp: (taskId: string, resolutionNotes: string, resolutionEvidenceId?: string) =>
+    request<FollowUpTaskResponse>(`/navigation/follow-ups/${taskId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ resolution_notes: resolutionNotes, resolution_evidence_id: resolutionEvidenceId }),
+    }),
+  closeCareGapWithEvidence: (payload: {
+    person_id: string;
+    care_gap_id: string;
+    evidence_source: string;
+    evidence_id: string;
+    verification_method?: string;
+    recommendation_id?: string;
+    verification_notes?: string;
+  }) =>
+    request<CareGapClosureResponse>('/navigation/care-gaps/close', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getNavigationAnalytics: () =>
+    request<NavigationAnalyticsResponse>('/navigation/analytics'),
 
   // Consent & Privacy (Phases 1-3)
   getOwnConsents: () => request<ConsentRecord[]>('/consent/me'),

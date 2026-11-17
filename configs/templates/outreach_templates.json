@@ -1,0 +1,126 @@
+{
+  "registry_version": "1.0.0",
+  "governance_body": "Abu Dhabi Health Services Company (SEHA) & ADPHC Community Outreach Committee",
+  "templates": [
+    {
+      "template_id": "TMPL-PED-WELL-CHILD-INVITE",
+      "purpose": "WELL_CHILD_SURVEILLANCE",
+      "approved": true,
+      "ar": {
+        "subject": "فحص صحة الطفل الدوري - مركز أبوظبي للصحة العامة",
+        "body": "عزيزي ولي الأمر، حان موعد فحص النمو والتطور الدوري لطفلكم {patient_name} المعتمد من مركز أبوظبي للصحة العامة. يرجى التنسيق لحجز الموعد لضمان استمرار متابعة صحة طفلكم.",
+        "direction": "rtl"
+      },
+      "en": {
+        "subject": "Well-Child Periodic Examination - ADPHC",
+        "body": "Dear Guardian, the periodic developmental surveillance visit for your child {patient_name} is now due under ADPHC standards. Please schedule an appointment to maintain your child's preventive health milestones.",
+        "direction": "ltr"
+      }
+    },
+    {
+      "template_id": "TMPL-PED-VACCINE-DUE",
+      "purpose": "IMMUNIZATION_RECALL",
+      "approved": true,
+      "ar": {
+        "subject": "تذكير بالتطعيمات الوطنية الإلزامية - قانون وديمة",
+        "body": "عزيزي ولي الأمر، نود تذكيركم بوجوب استكمال التطعيمات المقررة لطفلكم {patient_name} وفق البرنامج الوطني للتحصين وقانون وديمة لحماية الطفل. صحة طفلكم أولويتنا.",
+        "direction": "rtl"
+      },
+      "en": {
+        "subject": "Mandatory National Immunization Reminder - Wadeema's Law",
+        "body": "Dear Guardian, scheduled immunizations for your child {patient_name} are due under the UAE National Immunization Program and Wadeema's Child Rights Law. Please visit your designated primary healthcare center.",
+        "direction": "ltr"
+      }
+    },
+    {
+      "template_id": "TMPL-ADULT-IFHAS-INVITE",
+      "purpose": "ADULT_IFHAS_SCREENING",
+      "approved": true,
+      "ar": {
+        "subject": "دعوة لإجراء الفحص الشامل 'افحص' - وقاية لصحتك",
+        "body": "عزيزي/عزيزتي {patient_name}، يدعوكم مركز أبوظبي للصحة العامة لإجراء الفحص الدوري الشامل 'افحص' للاطمئنان على صحة القلب ونسبة السكر والمؤشرات الحيوية مجاناً.",
+        "direction": "rtl"
+      },
+      "en": {
+        "subject": "Invitation for ADPHC IFHAS Comprehensive Health Screening",
+        "body": "Dear {patient_name}, the Abu Dhabi Public Health Center invites you to undergo the 'IFHAS' comprehensive periodic screening to evaluate your cardiovascular and metabolic wellness.",
+        "direction": "ltr"
+      }
+    },
+    {
+      "template_id": "TMPL-ADULT-BP-RECALL",
+      "purpose": "CARDIOMETABOLIC_FOLLOWUP",
+      "approved": true,
+      "ar": {
+        "subject": "متابعة قياس ضغط الدم السريري",
+        "body": "عزيزي/عزيزتي {patient_name}، حرصاً على سلامتك، نوصي بإجراء فحص متابعة لضغط الدم لدى أقرب مركز صحي أو عيادة الرعاية الأولية لمراجعة المؤشرات مع طبيب الأسرة.",
+        "direction": "rtl"
+      },
+      "en": {
+        "subject": "Clinical Blood Pressure Follow-Up Reminder",
+        "body": "Dear {patient_name}, for your cardiovascular wellness, a clinical follow-up blood pressure check is recommended at your nearest primary healthcare center.",
+        "direction": "ltr"
+      }
+    },
+    {
+      "template_id": "TMPL-ADULT-DM-RECALL",
+      "purpose": "DIABETES_SCREENING_RECALL",
+      "approved": true,
+      "ar": {
+        "subject": "فحص السكري الدوري - رعاية صحية وقائية",
+        "body": "عزيزي/عزيزتي {patient_name}، حان موعد فحص سكر الدم الصائم أو التراكمي الدوري للكشف المبكر عن اضطرابات الجلوكوز والوقاية من مضاعفاتها.",
+        "direction": "rtl"
+      },
+      "en": {
+        "subject": "Periodic Diabetes Screening Reminder",
+        "body": "Dear {patient_name}, your periodic fasting plasma glucose or HbA1c screening is due for early detection and prevention of cardiometabolic risk factors.",
+        "direction": "ltr"
+      }
+    },
+    {
+      "template_id": "TMPL-GENOMIC-COUNSELING",
+      "purpose": "GENOMIC_CONSULTATION",
+      "approved": true,
+      "ar": {
+        "subject": "استشارة وراثية وقائية معتمدة - برنامج الجينوم الإماراتي",
+        "body": "عزيزي/عزيزتي {patient_name}، بناءً على مراجعة تقرير الجينوم الوقائي، يرجى حجز جلسة استشارة مع أخصائي الأمراض الوراثية المعتمد لمناقشة التوصيات الوقائية الدقيقة.",
+        "direction": "rtl"
+      },
+      "en": {
+        "subject": "Authorized Preventive Genetic Consultation - Emirati Genome Program",
+        "body": "Dear {patient_name}, following clinical review of your genomic profile under the Emirati Genome Program, an appointment with a certified Medical Geneticist is recommended to discuss precision preventive guidelines.",
+        "direction": "ltr"
+      }
+    },
+    {
+      "template_id": "TMPL-APPOINTMENT-REMINDER",
+      "purpose": "APPOINTMENT_COORDINATION",
+      "approved": true,
+      "ar": {
+        "subject": "تذكير بموعدك الوقائي القادم",
+        "body": "عزيزي/عزيزتي {patient_name}، نود تذكيركم بموعدكم الوقائي المحدد بتاريخ {appointment_time} في {location}. نرجو الحضور قبل الموعد بـ 15 دقيقة.",
+        "direction": "rtl"
+      },
+      "en": {
+        "subject": "Preventive Care Appointment Reminder",
+        "body": "Dear {patient_name}, this is a reminder for your preventive care appointment scheduled on {appointment_time} at {location}. Please arrive 15 minutes prior.",
+        "direction": "ltr"
+      }
+    },
+    {
+      "template_id": "TMPL-FOLLOWUP-NO-SHOW",
+      "purpose": "MISSED_CARE_FOLLOWUP",
+      "approved": true,
+      "ar": {
+        "subject": "متابعة موعدك الصحي - يرجى إعادة الجدولة",
+        "body": "عزيزي/عزيزتي {patient_name}، لقد فاتكم موعدكم السابق. حرصاً على استمرارية خطتكم الوقائية، يرجى التواصل معنا أو استخدام البوابة لإعادة جدولة الموعد.",
+        "direction": "rtl"
+      },
+      "en": {
+        "subject": "Missed Appointment Follow-Up - Please Reschedule",
+        "body": "Dear {patient_name}, you missed your recent preventive appointment. To ensure continuity of care, please contact your care team or use the portal to reschedule.",
+        "direction": "ltr"
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "registry_version": "1.0.0",
+  "governance_body": "DoH Abu Dhabi Localization and Patient Experience Office",
+  "translations": {
+    "nav_dashboard": { "en": "Executive Dashboard", "ar": "لوحة القيادة التنفيذية" },
+    "nav_patients": { "en": "Patient Intelligence", "ar": "سجل المرضى والمستفيدين" },
+    "nav_pathways": { "en": "Preventive Pathways", "ar": "مسارات الرعاية الوقائية" },
+    "nav_assessments": { "en": "Risk Assessments", "ar": "تقييمات المخاطر والوقاية" },
+    "nav_recommendations": { "en": "Preventive Recommendations", "ar": "التوصيات الوقائية المخصصة" },
+    "nav_care_plans": { "en": "Care Plans", "ar": "خطط الرعاية الوقائية" },
+    "nav_outreach": { "en": "Outreach & Localization", "ar": "التواصل والتوعية المجتمعية" },
+    "nav_navigation": { "en": "Care Navigation & Closed-Loop", "ar": "متابعة مسار الرعاية وإغلاق الفجوات" },
+    "status_pending_review": { "en": "Pending Clinical Review", "ar": "قيد المراجعة السريرية" },
+    "status_approved": { "en": "Clinically Approved", "ar": "معتمد سريرياً" },
+    "status_offered": { "en": "Offered to Patient", "ar": "تم إبلاغ المستفيد" },
+    "status_accepted": { "en": "Accepted", "ar": "مقبول من المستفيد" },
+    "status_declined": { "en": "Declined by Patient", "ar": "مرفوض من المستفيد" },
+    "status_scheduled": { "en": "Care Scheduled", "ar": "تم تحديد الموعد" },
+    "status_completed": { "en": "Care Completed & Verified", "ar": "مكتمل وموثق سريرياً" },
+    "priority_critical": { "en": "Critical Priority", "ar": "أولوية قصوى" },
+    "priority_high": { "en": "High Priority", "ar": "أولوية عالية" },
+    "priority_medium": { "en": "Medium Priority", "ar": "أولوية متوسطة" },
+    "priority_routine": { "en": "Routine Periodic", "ar": "دوري اعتيادي" },
+    "channel_in_app": { "en": "In-App Portal", "ar": "بوابة المستفيد الإلكترونية" },
+    "channel_sms": { "en": "SMS Text Message", "ar": "رسالة نصية قصيرة (SMS)" },
+    "channel_email": { "en": "Secure Email", "ar": "البريد الإلكتروني الآمن" },
+    "channel_whatsapp": { "en": "Verified WhatsApp Business", "ar": "واتساب للأعمال المعتمد" }
+  }
+}

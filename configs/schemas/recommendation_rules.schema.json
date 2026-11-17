@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RecommendationRulesSchema",
+  "type": "object",
+  "required": ["registry_version", "rules"],
+  "properties": {
+    "registry_version": { "type": "string" },
+    "governance_body": { "type": "string" },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule_id",
+          "rule_version",
+          "category",
+          "pathway_id",
+          "trigger_condition",
+          "default_priority",
+          "recommended_action",
+          "clinical_rationale",
+          "source_guideline",
+          "requires_human_review"
+        ],
+        "properties": {
+          "rule_id": { "type": "string" },
+          "rule_version": { "type": "string" },
+          "category": { "type": "string" },
+          "pathway_id": { "type": "string" },
+          "applicable_population": { "type": "string" },
+          "trigger_condition": {
+            "type": "object",
+            "properties": {
+              "care_gap_code": { "type": "string" },
+              "clinical_risk_tier": { "type": "string" },
+              "epistemic_status": { "type": "string" },
+              "age_min": { "type": "number" },
+              "age_max": { "type": "number" }
+            }
+          },
+          "default_priority": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "ROUTINE"] },
+          "recommended_action": { "type": "string" },
+          "clinical_rationale": { "type": "string" },
+          "source_guideline": { "type": "string" },
+          "recommended_window_days": { "type": "integer" },
+          "requires_human_review": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

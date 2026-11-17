@@ -322,3 +322,297 @@ export interface GenomicFindingResponse {
   reviewer_notes?: string;
   created_at: string;
 }
+
+// ==========================================
+// Phase 9: Recommendation & Care Plan Types
+// ==========================================
+export type RecommendationCategory =
+  | 'WELL_CHILD_VISIT'
+  | 'DEVELOPMENTAL_SCREENING'
+  | 'ADULT_COMPREHENSIVE_SCREENING'
+  | 'PREVENTIVE_LABORATORY_SCREENING'
+  | 'CARDIOMETABOLIC_SCREENING'
+  | 'FAMILY_HISTORY_REVIEW'
+  | 'GENOMIC_COUNSELING'
+  | 'LIFESTYLE_WELLNESS'
+  | 'SPECIALIST_REFERRAL'
+  | 'OVERDUE_RECALL'
+  | 'ADDITIONAL_INFO_COLLECTION'
+  | 'CLINICAL_REASSESSMENT';
+
+export type RecommendationPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'ROUTINE';
+
+export type RecommendationLifecycleStatus =
+  | 'DRAFT'
+  | 'PENDING_CLINICAL_REVIEW'
+  | 'APPROVED'
+  | 'MODIFIED'
+  | 'OFFERED'
+  | 'ACCEPTED'
+  | 'DECLINED'
+  | 'SCHEDULED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'EXPIRED'
+  | 'CANCELLED'
+  | 'SUPERSEDED';
+
+export interface PreventiveRecommendationResponse {
+  id: string;
+  organization_id: string;
+  person_id: string;
+  assessment_id?: string;
+  pathway_id: string;
+  care_gap_id?: string;
+  category: RecommendationCategory;
+  priority: RecommendationPriority;
+  lifecycle_status: RecommendationLifecycleStatus;
+  recommended_action: string;
+  clinical_rationale: string;
+  supporting_evidence: Record<string, any>;
+  source_guideline: string;
+  uncertainty_status: string;
+  rule_id: string;
+  rule_version: string;
+  target_date?: string;
+  expiration_date?: string;
+  requires_human_review: boolean;
+  declined_reason?: string;
+  assigned_provider_id?: string;
+  reviewer_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecommendationListResponse {
+  total: number;
+  items: PreventiveRecommendationResponse[];
+}
+
+export interface RecommendationExplanation {
+  recommendation_id: string;
+  category: string;
+  priority: string;
+  clinical_rationale: string;
+  source_guideline: string;
+  trigger_rule_id: string;
+  trigger_care_gap?: string;
+  identified_evidence: Record<string, any>;
+  uncertainty_status: string;
+  requires_human_review: boolean;
+  justification_summary: string;
+}
+
+export interface CarePlanItemResponse {
+  id: string;
+  care_plan_id: string;
+  recommendation_id: string;
+  status: string;
+  target_date?: string;
+  completed_at?: string;
+  recommendation?: PreventiveRecommendationResponse;
+}
+
+export interface CarePlanResponse {
+  id: string;
+  organization_id: string;
+  person_id: string;
+  plan_name: string;
+  pathway_id: string;
+  status: string;
+  goals: Array<{ goal: string; target?: string }>;
+  responsible_org_id: string;
+  assigned_care_team: Array<{ role: string; user_id?: string; name?: string }>;
+  target_date?: string;
+  review_schedule?: string;
+  created_at: string;
+  updated_at: string;
+  items: CarePlanItemResponse[];
+}
+
+// ==========================================
+// Phase 10: Cultural Outreach Types
+// ==========================================
+export type CommunicationChannel = 'IN_APP' | 'SMS' | 'EMAIL' | 'WHATSAPP';
+export type OutreachDeliveryStatus =
+  | 'DRAFT'
+  | 'PENDING'
+  | 'SCHEDULED'
+  | 'SENDING'
+  | 'SENT'
+  | 'DELIVERED'
+  | 'FAILED'
+  | 'RETRY_PENDING'
+  | 'CANCELLED'
+  | 'SUPPRESSED'
+  | 'EXPIRED';
+
+export interface CommunicationPreferenceResponse {
+  id: string;
+  person_id: string;
+  preferred_language: 'ar' | 'en';
+  preferred_channel: CommunicationChannel;
+  contact_window_start: string;
+  contact_window_end: string;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
+  consent_opt_in: boolean;
+  opt_out_timestamp?: string;
+  guardian_proxy_required: boolean;
+  accessibility_needs?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OutreachTaskResponse {
+  id: string;
+  organization_id: string;
+  person_id: string;
+  recommendation_id?: string;
+  recipient_id?: string;
+  recipient_role: string;
+  channel: CommunicationChannel;
+  template_id: string;
+  language: string;
+  message_body: string;
+  scheduled_at: string;
+  attempted_at?: string;
+  delivery_status: OutreachDeliveryStatus;
+  provider_status: string;
+  provider_message_id?: string;
+  failure_reason?: string;
+  retry_count: number;
+  max_retries: number;
+  consent_verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OutreachTaskListResponse {
+  total: number;
+  items: OutreachTaskResponse[];
+}
+
+export interface OutreachAnalyticsResponse {
+  total_generated: number;
+  total_attempted: number;
+  total_delivered: number;
+  total_failed: number;
+  total_suppressed: number;
+  by_channel: Record<string, number>;
+  by_language: Record<string, number>;
+  active_providers_count: number;
+  honest_boundary_note: string;
+}
+
+export interface TemplatePreviewResponse {
+  template_id: string;
+  language: string;
+  direction: 'rtl' | 'ltr';
+  rendered_subject: string;
+  rendered_body: string;
+  governance_approved: boolean;
+}
+
+// ==========================================
+// Phase 11: Care Navigation Types
+// ==========================================
+export type AppointmentStatus =
+  | 'REQUESTED'
+  | 'BOOKED'
+  | 'CONFIRMED'
+  | 'RESCHEDULED'
+  | 'ATTENDED'
+  | 'NO_SHOW'
+  | 'CANCELLED'
+  | 'COMPLETED';
+
+export type ReferralStatus =
+  | 'DRAFT'
+  | 'SUBMITTED'
+  | 'ACCEPTED'
+  | 'SCHEDULED'
+  | 'COMPLETED'
+  | 'REJECTED'
+  | 'CANCELLED';
+
+export type FollowUpStatus = 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'ESCALATED' | 'CANCELLED';
+
+export interface AppointmentResponse {
+  id: string;
+  organization_id: string;
+  person_id: string;
+  recommendation_id?: string;
+  care_plan_id?: string;
+  service_type: string;
+  scheduled_time: string;
+  location: string;
+  provider_id?: string;
+  status: AppointmentStatus;
+  attendance_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReferralResponse {
+  id: string;
+  organization_id: string;
+  person_id: string;
+  recommendation_id?: string;
+  referring_provider_id: string;
+  receiving_org_id?: string;
+  specialty: string;
+  clinical_indication: string;
+  priority: string;
+  status: ReferralStatus;
+  outcome_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FollowUpTaskResponse {
+  id: string;
+  organization_id: string;
+  person_id: string;
+  recommendation_id?: string;
+  appointment_id?: string;
+  referral_id?: string;
+  trigger_reason: string;
+  assigned_role: string;
+  assigned_user_id?: string;
+  due_date: string;
+  priority: string;
+  status: FollowUpStatus;
+  resolution_notes?: string;
+  resolution_evidence_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CareGapClosureResponse {
+  id: string;
+  organization_id: string;
+  person_id: string;
+  care_gap_id: string;
+  recommendation_id?: string;
+  evidence_source: string;
+  evidence_id: string;
+  verification_method: string;
+  verifying_user_id: string;
+  verification_notes?: string;
+  verified_at: string;
+  is_valid: boolean;
+  status: string;
+}
+
+export interface NavigationAnalyticsResponse {
+  total_appointments: number;
+  attended_appointments: number;
+  no_show_appointments: number;
+  attendance_rate: number;
+  total_referrals: number;
+  completed_referrals: number;
+  active_follow_up_tasks: number;
+  closed_care_gaps_count: number;
+  data_source_note: string;
+}

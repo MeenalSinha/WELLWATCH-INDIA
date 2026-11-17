@@ -1,0 +1,38 @@
+{
+  "registry_version": "1.0.0",
+  "governance_body": "Abu Dhabi Public Health Center (ADPHC) & DoH Abu Dhabi",
+  "rules": [
+    {
+      "rule_id": "REC-PED-001",
+      "rule_version": "1.0.0",
+      "category": "WELL_CHILD_VISIT",
+      "pathway_id": "pediatric_well_child",
+      "applicable_population": "pediatric",
+      "trigger_condition": {
+        "care_gap_code": "GAP-WELL-CHILD-DUE"
+      },
+      "default_priority": "HIGH",
+      "recommended_action": "Schedule comprehensive Well-Child developmental and clinical assessment",
+      "clinical_rationale": "Periodic developmental surveillance, anthropometric growth tracking, and sensory assessment are mandated by ADPHC Well-Child Standard.",
+      "source_guideline": "ADPHC Well-Child Clinical Standard 2024",
+      "recommended_window_days": 14,
+      "requires_human_review": true
+    },
+    {
+      "rule_id": "REC-PED-002",
+      "rule_version": "1.0.0",
+      "category": "DEVELOPMENTAL_SCREENING",
+      "pathway_id": "pediatric_well_child",
+      "applicable_population": "pediatric",
+      "trigger_condition": {
+        "care_gap_code": "GAP-VACCINATION-DUE"
+      },
+      "default_priority": "CRITICAL",
+      "recommended_action": "Administer age-appropriate mandatory National Immunization Program vaccines",
+      "clinical_rationale": "Timely immunization prevents vaccine-preventable pediatric morbidity and complies with UAE Federal Law No. 3 (Wadeema's Law).",
+      "source_guideline": "UAE National Immunization Program & Wadeema's Law",
+      "recommended_window_days": 7,
+      "requires_human_review": true
+    }
+  ]
+}

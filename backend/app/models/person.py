@@ -107,6 +107,21 @@ class Person(BaseDBModel):
             total_months -= 1
         return max(0, total_months)
 
+    @property
+    def is_pediatric(self) -> bool:
+        if self.patient_profile and hasattr(self.patient_profile, "population_classification"):
+            from backend.app.models.person import PopulationClassification
+            return self.patient_profile.population_classification == PopulationClassification.PEDIATRIC
+        return self.age_years < 18
+
+    @property
+    def primary_organization_id(self) -> Optional[str]:
+        return self.patient_profile.organization_id if self.patient_profile else None
+
+    @property
+    def phone_number(self) -> Optional[str]:
+        return "+971500000000"
+
 
 class PersonIdentifier(BaseDBModel):
     """

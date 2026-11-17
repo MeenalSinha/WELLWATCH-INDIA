@@ -1,0 +1,70 @@
+{
+  "registry_version": "1.0.0",
+  "governance_body": "Abu Dhabi Public Health Center (ADPHC) & DoH Abu Dhabi",
+  "rules": [
+    {
+      "rule_id": "REC-ADULT-001",
+      "rule_version": "1.0.0",
+      "category": "ADULT_COMPREHENSIVE_SCREENING",
+      "pathway_id": "adphc_ifhas",
+      "applicable_population": "adult",
+      "trigger_condition": {
+        "care_gap_code": "GAP-IFHAS-COMPREHENSIVE"
+      },
+      "default_priority": "MEDIUM",
+      "recommended_action": "Complete annual/triennial ADPHC IFHAS comprehensive health screening",
+      "clinical_rationale": "Comprehensive screening evaluates cardiometabolic risks, oral health, mental health, and age-specific cancers.",
+      "source_guideline": "ADPHC IFHAS Adult Periodic Examination Standard",
+      "recommended_window_days": 30,
+      "requires_human_review": false
+    },
+    {
+      "rule_id": "REC-ADULT-002",
+      "rule_version": "1.0.0",
+      "category": "CARDIOMETABOLIC_SCREENING",
+      "pathway_id": "adphc_ifhas",
+      "applicable_population": "adult",
+      "trigger_condition": {
+        "care_gap_code": "GAP-BP-OVERDUE"
+      },
+      "default_priority": "HIGH",
+      "recommended_action": "Obtain formal clinical blood pressure measurement and repeat triage",
+      "clinical_rationale": "Elevated or overdue blood pressure monitoring prevents undiagnosed hypertension and associated cardiovascular complications.",
+      "source_guideline": "DoH Abu Dhabi Cardiovascular Health Guidance 2024",
+      "recommended_window_days": 14,
+      "requires_human_review": true
+    },
+    {
+      "rule_id": "REC-ADULT-003",
+      "rule_version": "1.0.0",
+      "category": "PREVENTIVE_LABORATORY_SCREENING",
+      "pathway_id": "adphc_ifhas",
+      "applicable_population": "adult",
+      "trigger_condition": {
+        "care_gap_code": "GAP-DM-GLUCOSE-OVERDUE"
+      },
+      "default_priority": "HIGH",
+      "recommended_action": "Order fasting plasma glucose (LOINC 1558-6) or HbA1c (LOINC 4548-4) screening",
+      "clinical_rationale": "Type 2 Diabetes Mellitus screening detects asymptomatic dysglycemia in at-risk adult populations.",
+      "source_guideline": "ADPHC Diabetes Screening & Management Clinical Guidelines",
+      "recommended_window_days": 21,
+      "requires_human_review": true
+    },
+    {
+      "rule_id": "REC-ADULT-004",
+      "rule_version": "1.0.0",
+      "category": "ADDITIONAL_INFO_COLLECTION",
+      "pathway_id": "adphc_ifhas",
+      "applicable_population": "adult",
+      "trigger_condition": {
+        "epistemic_status": "NEEDS_DATA"
+      },
+      "default_priority": "MEDIUM",
+      "recommended_action": "Schedule basic vitals intake encounter to resolve missing baseline clinical data",
+      "clinical_rationale": "Clinical risk scoring cannot safely evaluate cardiovascular or metabolic health without baseline measurements.",
+      "source_guideline": "DoH Preventive Care Quality Standards - Epistemic Safety Invariant",
+      "recommended_window_days": 14,
+      "requires_human_review": false
+    }
+  ]
+}

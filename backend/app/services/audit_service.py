@@ -5,6 +5,31 @@ from backend.app.models.audit import AuditLog, AuditOutcome
 
 
 class AuditService:
+    @classmethod
+    def log(
+        cls,
+        db: Session,
+        action: str,
+        resource_type: str,
+        outcome: AuditOutcome,
+        user_id: Optional[str] = None,
+        resource_id: Optional[str] = None,
+        organization_id: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+        correlation_id: str = "sys",
+    ) -> AuditLog:
+        return cls.log_event(
+            db=db,
+            action=action,
+            resource_type=resource_type,
+            outcome=outcome,
+            correlation_id=correlation_id,
+            actor_user_id=user_id,
+            resource_id=resource_id,
+            organization_id=organization_id,
+            details=details,
+        )
+
     @staticmethod
     def log_event(
         db: Session,
