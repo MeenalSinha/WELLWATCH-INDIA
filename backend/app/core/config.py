@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     # UAE Healthcare Context Defaults
     JURISDICTION: str = "Abu Dhabi, United Arab Emirates"
     DEFAULT_TIMEZONE: str = "Asia/Dubai"
+
+    # Clinical Data Quality & Operational Recency Thresholds
+    DATA_QUALITY_VITALS_MAX_RECENCY_DAYS: int = 365
+    DATA_QUALITY_SCREENING_MAX_RECENCY_DAYS: int = 1095
+    DATA_QUALITY_CONFLICT_THRESHOLD_PERCENT: float = 30.0
+    DATA_QUALITY_CONFLICT_WINDOW_HOURS: int = 48
     
     model_config = SettingsConfigDict(
         env_file=".env",

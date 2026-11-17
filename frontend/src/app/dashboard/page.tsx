@@ -49,18 +49,30 @@ export default function DashboardPage() {
             {user.organization_id ? `Assigned Facility ID: ${user.organization_id}` : 'Independent Resident Profile'}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2">
           <Link
-            href="/screening"
-            className="px-4 py-2 rounded-lg bg-emerald-800 text-white text-xs font-semibold shadow hover:bg-emerald-900 transition"
+            href="/patients"
+            className="px-3 py-1.5 rounded-lg bg-emerald-800 text-white text-xs font-semibold shadow hover:bg-emerald-900 transition"
           >
-            Record Screening Vitals
+            Patients Directory
           </Link>
           <Link
-            href="/consent"
-            className="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 hover:bg-slate-200 transition"
+            href="/pathways"
+            className="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-semibold shadow hover:bg-slate-900 transition"
           >
-            Manage Consents
+            Care Pathways
+          </Link>
+          <Link
+            href="/assessments"
+            className="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-semibold shadow hover:bg-slate-900 transition"
+          >
+            Risk Assessments
+          </Link>
+          <Link
+            href="/screening"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 hover:bg-slate-200 transition"
+          >
+            Record Vitals
           </Link>
         </div>
       </div>

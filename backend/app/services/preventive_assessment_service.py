@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import date, datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
@@ -32,6 +33,25 @@ class PreventiveAssessmentService:
       4. Data Confidence & Epistemic Uncertainty (Abstention)
       5. Human Clinical Review
     """
+
+    _rules_cache: Optional[List[Dict[str, Any]]] = None
+
+    @classmethod
+    def load_clinical_risk_indicator_rules(cls) -> List[Dict[str, Any]]:
+        """Loads version-controlled clinical risk indicator definitions and thresholds from configuration."""
+        if cls._rules_cache is not None:
+            return cls._rules_cache
+
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+        config_path = os.path.join(base_dir, "configs", "clinical_rules", "clinical_risk_indicators.json")
+
+        if os.path.exists(config_path):
+            with open(config_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                cls._rules_cache = data.get("indicators", [])
+        else:
+            cls._rules_cache = []
+        return cls._rules_cache
 
     @classmethod
     def evaluate_clinical_risk_indicators(
@@ -107,112 +127,32 @@ class PreventiveAssessmentService:
         elevated_count = 0
         moderate_count = 0
 
-        # Indicator A: Blood Pressure (Systolic 8480-6, Diastolic 8462-4)
-        sys_obs = obs_by_code.get("8480-6")
-        dia_obs = obs_by_code.get("8462-4")
-        if sys_obs and sys_obs.canonical_value is not None:
-            val = sys_obs.canonical_value
-            if val >= 140.0:
-                elevated_count += 1
-                factors.append({
-                    "indicator": "STAGE_2_HYPERTENSION_SYSTOLIC",
-                    "code": "8480-6",
-                    "display": "Elevated Systolic Blood Pressure",
-                    "value": f"{val} mmHg",
-                    "clinical_source": "DoH Primary Care Hypertension Guidelines",
-                    "severity": "ELEVATED",
-                    "provenance_ref": sys_obs.provenance_id
-                })
-            elif val >= 130.0:
-                moderate_count += 1
-                factors.append({
-                    "indicator": "STAGE_1_HYPERTENSION_SYSTOLIC",
-                    "code": "8480-6",
-                    "display": "Pre-Hypertension / Stage 1 Systolic",
-                    "value": f"{val} mmHg",
-                    "clinical_source": "DoH Primary Care Hypertension Guidelines",
-                    "severity": "MODERATE",
-                    "provenance_ref": sys_obs.provenance_id
-                })
-
-        if dia_obs and dia_obs.canonical_value is not None:
-            val = dia_obs.canonical_value
-            if val >= 90.0:
-                elevated_count += 1
-                factors.append({
-                    "indicator": "STAGE_2_HYPERTENSION_DIASTOLIC",
-                    "code": "8462-4",
-                    "display": "Elevated Diastolic Blood Pressure",
-                    "value": f"{val} mmHg",
-                    "clinical_source": "DoH Primary Care Hypertension Guidelines",
-                    "severity": "ELEVATED",
-                    "provenance_ref": dia_obs.provenance_id
-                })
-            elif val >= 80.0:
-                moderate_count += 1
-                factors.append({
-                    "indicator": "STAGE_1_HYPERTENSION_DIASTOLIC",
-                    "code": "8462-4",
-                    "display": "Pre-Hypertension / Stage 1 Diastolic",
-                    "value": f"{val} mmHg",
-                    "clinical_source": "DoH Primary Care Hypertension Guidelines",
-                    "severity": "MODERATE",
-                    "provenance_ref": dia_obs.provenance_id
-                })
-
-        # Indicator B: Fasting Blood Glucose (2339-0)
-        glu_obs = obs_by_code.get("2339-0")
-        if glu_obs and glu_obs.canonical_value is not None:
-            val = glu_obs.canonical_value
-            if val >= 126.0:
-                elevated_count += 1
-                factors.append({
-                    "indicator": "DIABETES_RANGE_FASTING_GLUCOSE",
-                    "code": "2339-0",
-                    "display": "Fasting Blood Glucose (Diabetes Range)",
-                    "value": f"{val} mg/dL",
-                    "clinical_source": "DoH Diabetes Clinical Practice Guidelines",
-                    "severity": "ELEVATED",
-                    "provenance_ref": glu_obs.provenance_id
-                })
-            elif val >= 100.0:
-                moderate_count += 1
-                factors.append({
-                    "indicator": "IMPAIRED_FASTING_GLUCOSE_PREDIABETES",
-                    "code": "2339-0",
-                    "display": "Impaired Fasting Glucose (Prediabetes Range)",
-                    "value": f"{val} mg/dL",
-                    "clinical_source": "DoH Diabetes Clinical Practice Guidelines",
-                    "severity": "MODERATE",
-                    "provenance_ref": glu_obs.provenance_id
-                })
-
-        # Indicator C: Body Mass Index (39156-5)
-        bmi_obs = obs_by_code.get("39156-5")
-        if bmi_obs and bmi_obs.canonical_value is not None:
-            val = bmi_obs.canonical_value
-            if val >= 35.0:
-                elevated_count += 1
-                factors.append({
-                    "indicator": "OBESITY_CLASS_2",
-                    "code": "39156-5",
-                    "display": "Obesity Class II+",
-                    "value": f"{val} kg/m2",
-                    "clinical_source": "ADPHC Adult Health Standards",
-                    "severity": "ELEVATED",
-                    "provenance_ref": bmi_obs.provenance_id
-                })
-            elif val >= 30.0:
-                moderate_count += 1
-                factors.append({
-                    "indicator": "OBESITY_CLASS_1",
-                    "code": "39156-5",
-                    "display": "Obesity Class I",
-                    "value": f"{val} kg/m2",
-                    "clinical_source": "ADPHC Adult Health Standards",
-                    "severity": "MODERATE",
-                    "provenance_ref": bmi_obs.provenance_id
-                })
+        # Dynamically evaluate clinical risk indicators from approved configuration
+        configured_indicators = cls.load_clinical_risk_indicator_rules()
+        for ind in configured_indicators:
+            code = ind["concept_code"]
+            obs = obs_by_code.get(code)
+            if obs and obs.canonical_value is not None:
+                val = obs.canonical_value
+                for r in ind.get("rules", []):
+                    op = r["operator"]
+                    threshold = r["value"]
+                    if (op == ">=" and val >= threshold) or (op == ">" and val > threshold):
+                        sev = r.get("sub_severity", ind["severity"])
+                        if sev == "ELEVATED":
+                            elevated_count += 1
+                        elif sev == "MODERATE":
+                            moderate_count += 1
+                        factors.append({
+                            "indicator": r["sub_indicator"],
+                            "code": code,
+                            "display": r["sub_display"],
+                            "value": f"{val} {ind.get('unit', '')}".strip(),
+                            "clinical_source": ind["clinical_source"],
+                            "severity": sev,
+                            "provenance_ref": obs.provenance_id
+                        })
+                        break
 
         # Indicator D: Documented Chronic Conditions (ICD-10)
         for c in conditions:

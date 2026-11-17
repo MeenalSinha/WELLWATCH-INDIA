@@ -1,0 +1,107 @@
+{
+  "version": "1.0",
+  "effective_date": "2024-01-01",
+  "authoritative_body": "Department of Health Abu Dhabi (DoH) & Abu Dhabi Public Health Centre (ADPHC)",
+  "indicators": [
+    {
+      "indicator_id": "SYSTOLIC_BLOOD_PRESSURE",
+      "concept_code": "8480-6",
+      "concept_system": "http://loinc.org",
+      "display_name": "Systolic Blood Pressure",
+      "clinical_source": "DoH Primary Care Hypertension Guidelines 2024",
+      "severity": "ELEVATED",
+      "unit": "mmHg",
+      "rules": [
+        {
+          "operator": ">=",
+          "value": 140.0,
+          "sub_indicator": "STAGE_2_HYPERTENSION_SYSTOLIC",
+          "sub_display": "Elevated Systolic Blood Pressure",
+          "sub_severity": "ELEVATED"
+        },
+        {
+          "operator": ">=",
+          "value": 130.0,
+          "sub_indicator": "STAGE_1_HYPERTENSION_SYSTOLIC",
+          "sub_display": "Pre-Hypertension / Stage 1 Systolic",
+          "sub_severity": "MODERATE"
+        }
+      ]
+    },
+    {
+      "indicator_id": "DIASTOLIC_BLOOD_PRESSURE",
+      "concept_code": "8462-4",
+      "concept_system": "http://loinc.org",
+      "display_name": "Diastolic Blood Pressure",
+      "clinical_source": "DoH Primary Care Hypertension Guidelines 2024",
+      "severity": "ELEVATED",
+      "unit": "mmHg",
+      "rules": [
+        {
+          "operator": ">=",
+          "value": 90.0,
+          "sub_indicator": "STAGE_2_HYPERTENSION_DIASTOLIC",
+          "sub_display": "Elevated Diastolic Blood Pressure",
+          "sub_severity": "ELEVATED"
+        },
+        {
+          "operator": ">=",
+          "value": 80.0,
+          "sub_indicator": "STAGE_1_HYPERTENSION_DIASTOLIC",
+          "sub_display": "Pre-Hypertension / Stage 1 Diastolic",
+          "sub_severity": "MODERATE"
+        }
+      ]
+    },
+    {
+      "indicator_id": "FASTING_BLOOD_GLUCOSE",
+      "concept_code": "2339-0",
+      "concept_system": "http://loinc.org",
+      "display_name": "Fasting Blood Glucose",
+      "clinical_source": "DoH Diabetes Clinical Practice Guidelines",
+      "severity": "ELEVATED",
+      "unit": "mg/dL",
+      "rules": [
+        {
+          "operator": ">=",
+          "value": 126.0,
+          "sub_indicator": "DIABETES_RANGE_FASTING_GLUCOSE",
+          "sub_display": "Fasting Blood Glucose (Diabetes Range)",
+          "sub_severity": "ELEVATED"
+        },
+        {
+          "operator": ">=",
+          "value": 100.0,
+          "sub_indicator": "IMPAIRED_FASTING_GLUCOSE_PREDIABETES",
+          "sub_display": "Impaired Fasting Glucose (Prediabetes Range)",
+          "sub_severity": "MODERATE"
+        }
+      ]
+    },
+    {
+      "indicator_id": "BODY_MASS_INDEX",
+      "concept_code": "39156-5",
+      "concept_system": "http://loinc.org",
+      "display_name": "Body Mass Index",
+      "clinical_source": "ADPHC Adult Health Standards",
+      "severity": "ELEVATED",
+      "unit": "kg/m2",
+      "rules": [
+        {
+          "operator": ">=",
+          "value": 35.0,
+          "sub_indicator": "OBESITY_CLASS_2",
+          "sub_display": "Obesity Class II+",
+          "sub_severity": "ELEVATED"
+        },
+        {
+          "operator": ">=",
+          "value": 30.0,
+          "sub_indicator": "OBESITY_CLASS_1",
+          "sub_display": "Obesity Class I",
+          "sub_severity": "MODERATE"
+        }
+      ]
+    }
+  ]
+}

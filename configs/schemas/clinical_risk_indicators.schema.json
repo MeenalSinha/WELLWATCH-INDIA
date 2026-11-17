@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ClinicalRiskIndicatorsConfig",
+  "description": "Validated schema for clinical risk indicator thresholds and guidelines in WELLWATCH PREVENT.",
+  "type": "object",
+  "required": ["version", "effective_date", "authoritative_body", "indicators"],
+  "properties": {
+    "version": { "type": "string" },
+    "effective_date": { "type": "string", "format": "date" },
+    "authoritative_body": { "type": "string" },
+    "indicators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["indicator_id", "concept_code", "display_name", "clinical_source", "severity", "rules"],
+        "properties": {
+          "indicator_id": { "type": "string" },
+          "concept_code": { "type": "string" },
+          "concept_system": { "type": "string", "default": "http://loinc.org" },
+          "display_name": { "type": "string" },
+          "clinical_source": { "type": "string" },
+          "severity": { "type": "string", "enum": ["ELEVATED", "MODERATE", "LOW"] },
+          "unit": { "type": "string" },
+          "rules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["operator", "value", "sub_indicator", "sub_display"],
+              "properties": {
+                "operator": { "type": "string", "enum": [">=", ">", "<=", "<", "between"] },
+                "value": { "type": "number" },
+                "max_value": { "type": "number" },
+                "sub_indicator": { "type": "string" },
+                "sub_display": { "type": "string" },
+                "sub_severity": { "type": "string", "enum": ["ELEVATED", "MODERATE", "LOW"] }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

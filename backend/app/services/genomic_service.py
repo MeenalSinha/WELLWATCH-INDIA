@@ -4,6 +4,8 @@ Implements clinical interpretation of genomic variants aligned with the Emirati 
 and enforces strict safety invariants: VUS (Variants of Uncertain Significance) must never trigger
 automated clinical risk escalation or intervention orders.
 """
+import json
+import os
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
@@ -27,41 +29,34 @@ from backend.app.security.rbac import has_permission
 class GenomicService:
     """
     Governs ingestion, interpretation, safety invariant enforcement, and review of genomic findings.
+    Loads actionable genetic guidelines dynamically from governed JSON configurations.
     """
 
-    # Gene to High-Confidence Preventive Indication Mapping (Authoritative EGP / ACMG Secondary Findings)
-    ACTIONABLE_GENE_INDICATIONS = {
-        "LDLR": {
-            "condition": "Familial Hypercholesterolemia (FH)",
-            "preventive_pathway": "EARLY_CARDIOVASCULAR_LIPID_SCREENING",
-            "clinical_guidance": "Initiate early intensive lipid panel screening (annual fasting lipid profile, ApoB, Lp(a)) and lifestyle cardiometabolic monitoring."
-        },
-        "APOB": {
-            "condition": "Familial Hypercholesterolemia (FH)",
-            "preventive_pathway": "EARLY_CARDIOVASCULAR_LIPID_SCREENING",
-            "clinical_guidance": "Initiate annual lipid profile evaluation; evaluate candidate for early lipid-lowering therapy."
-        },
-        "BRCA1": {
-            "condition": "Hereditary Breast and Ovarian Cancer (HBOC)",
-            "preventive_pathway": "HIGH_RISK_BREAST_SCREENING",
-            "clinical_guidance": "Accelerate breast cancer surveillance: annual contrast-enhanced breast MRI beginning at age 25-30, combined with mammography."
-        },
-        "BRCA2": {
-            "condition": "Hereditary Breast and Ovarian Cancer (HBOC)",
-            "preventive_pathway": "HIGH_RISK_BREAST_SCREENING",
-            "clinical_guidance": "Initiate enhanced surveillance: annual breast MRI and mammography starting age 25-30."
-        },
-        "MLH1": {
-            "condition": "Lynch Syndrome (Hereditary Colorectal Cancer)",
-            "preventive_pathway": "EARLY_COLONOSCOPY_SURVEILLANCE",
-            "clinical_guidance": "Initiate high-resolution colonoscopy surveillance every 1-2 years beginning at age 20-25."
-        },
-        "MSH2": {
-            "condition": "Lynch Syndrome (Hereditary Colorectal Cancer)",
-            "preventive_pathway": "EARLY_COLONOSCOPY_SURVEILLANCE",
-            "clinical_guidance": "Initiate high-resolution colonoscopy surveillance every 1-2 years beginning at age 20-25."
-        }
-    }
+    _actionable_cache: Optional[Dict[str, Any]] = None
+
+    @classmethod
+    def load_actionable_guidelines(cls) -> Dict[str, Any]:
+        """Loads version-controlled actionable genomic guidelines from configuration registry."""
+        if cls._actionable_cache is not None:
+            return cls._actionable_cache
+
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+        config_path = os.path.join(base_dir, "configs", "genomics", "actionable_guidelines.json")
+
+        mapping = {}
+        if os.path.exists(config_path):
+            with open(config_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for item in data.get("actionable_genes", []):
+                    mapping[item["gene_symbol"].upper()] = {
+                        "condition": item["associated_condition"],
+                        "preventive_pathway": item["preventive_pathway"],
+                        "clinical_guidance": item["clinical_guidance"],
+                        "evidence_source": item.get("evidence_source", "ACMG SF v3.2 / EGP"),
+                        "required_classification": item.get("required_classification", ["PATHOGENIC", "LIKELY_PATHOGENIC"])
+                    }
+        cls._actionable_cache = mapping
+        return cls._actionable_cache
 
     @classmethod
     def record_genomic_finding(
@@ -88,9 +83,10 @@ class GenomicService:
         # Determine actionable guidance if gene has recognized preventive indication
         actionable_guidance = None
         gene_upper = gene_symbol.upper()
+        guidelines = cls.load_actionable_guidelines()
         if variant_classification in [VariantClassification.PATHOGENIC, VariantClassification.LIKELY_PATHOGENIC]:
-            if gene_upper in cls.ACTIONABLE_GENE_INDICATIONS:
-                actionable_guidance = cls.ACTIONABLE_GENE_INDICATIONS[gene_upper]["clinical_guidance"]
+            if gene_upper in guidelines:
+                actionable_guidance = guidelines[gene_upper]["clinical_guidance"]
 
         # Register data source and provenance
         data_source = db.query(DataSource).filter(DataSource.system_name == source_laboratory).first()
@@ -183,11 +179,12 @@ class GenomicService:
         benign_count = 0
         has_pathogenic_risk = False
 
+        guidelines = cls.load_actionable_guidelines()
         for f in findings:
             if f.variant_classification in [VariantClassification.PATHOGENIC, VariantClassification.LIKELY_PATHOGENIC]:
                 # Actionable pathogenic variant
                 has_pathogenic_risk = True
-                indication = cls.ACTIONABLE_GENE_INDICATIONS.get(f.gene_symbol, {})
+                indication = guidelines.get(f.gene_symbol, {})
                 actionable_factors.append({
                     "indicator": f"GENOMIC_PATHOGENIC_{f.gene_symbol}",
                     "gene": f.gene_symbol,

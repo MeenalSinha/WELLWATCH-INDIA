@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "effective_date": "2024-01-01",
+  "authoritative_body": "Emirati Genome Program (EGP) & ACMG SF v3.2 Clinical Working Group",
+  "actionable_genes": [
+    {
+      "gene_symbol": "LDLR",
+      "associated_condition": "Familial Hypercholesterolemia (FH)",
+      "inheritance": "Autosomal Dominant",
+      "preventive_pathway": "EARLY_CARDIOVASCULAR_LIPID_SCREENING",
+      "clinical_guidance": "Initiate early intensive lipid panel screening (annual fasting lipid profile, ApoB, Lp(a)) and lifestyle cardiometabolic monitoring.",
+      "required_classification": ["PATHOGENIC", "LIKELY_PATHOGENIC"],
+      "evidence_source": "ACMG SF v3.2 / National Heart, Lung, and Blood Institute FH Guidelines"
+    },
+    {
+      "gene_symbol": "APOB",
+      "associated_condition": "Familial Hypercholesterolemia (FH)",
+      "inheritance": "Autosomal Dominant",
+      "preventive_pathway": "EARLY_CARDIOVASCULAR_LIPID_SCREENING",
+      "clinical_guidance": "Initiate annual lipid profile evaluation; evaluate candidate for early lipid-lowering therapy.",
+      "required_classification": ["PATHOGENIC", "LIKELY_PATHOGENIC"],
+      "evidence_source": "ACMG SF v3.2 / National Heart, Lung, and Blood Institute FH Guidelines"
+    },
+    {
+      "gene_symbol": "BRCA1",
+      "associated_condition": "Hereditary Breast and Ovarian Cancer (HBOC)",
+      "inheritance": "Autosomal Dominant",
+      "preventive_pathway": "HIGH_RISK_BREAST_SCREENING",
+      "clinical_guidance": "Accelerate breast cancer surveillance: annual contrast-enhanced breast MRI beginning at age 25-30, combined with mammography.",
+      "required_classification": ["PATHOGENIC", "LIKELY_PATHOGENIC"],
+      "evidence_source": "National Comprehensive Cancer Network (NCCN) Guidelines / DoH Abu Dhabi Oncology Standards"
+    },
+    {
+      "gene_symbol": "BRCA2",
+      "associated_condition": "Hereditary Breast and Ovarian Cancer (HBOC)",
+      "inheritance": "Autosomal Dominant",
+      "preventive_pathway": "HIGH_RISK_BREAST_SCREENING",
+      "clinical_guidance": "Initiate enhanced surveillance: annual breast MRI and mammography starting age 25-30.",
+      "required_classification": ["PATHOGENIC", "LIKELY_PATHOGENIC"],
+      "evidence_source": "National Comprehensive Cancer Network (NCCN) Guidelines / DoH Abu Dhabi Oncology Standards"
+    },
+    {
+      "gene_symbol": "MLH1",
+      "associated_condition": "Lynch Syndrome (Hereditary Colorectal Cancer)",
+      "inheritance": "Autosomal Dominant",
+      "preventive_pathway": "EARLY_COLONOSCOPY_SURVEILLANCE",
+      "clinical_guidance": "Initiate high-resolution colonoscopy surveillance every 1-2 years beginning at age 20-25.",
+      "required_classification": ["PATHOGENIC", "LIKELY_PATHOGENIC"],
+      "evidence_source": "ACMG SF v3.2 / NCCN Genetic/Familial High-Risk Colorectal Assessment"
+    },
+    {
+      "gene_symbol": "MSH2",
+      "associated_condition": "Lynch Syndrome (Hereditary Colorectal Cancer)",
+      "inheritance": "Autosomal Dominant",
+      "preventive_pathway": "EARLY_COLONOSCOPY_SURVEILLANCE",
+      "clinical_guidance": "Initiate high-resolution colonoscopy surveillance every 1-2 years beginning at age 20-25.",
+      "required_classification": ["PATHOGENIC", "LIKELY_PATHOGENIC"],
+      "evidence_source": "ACMG SF v3.2 / NCCN Genetic/Familial High-Risk Colorectal Assessment"
+    }
+  ]
+}

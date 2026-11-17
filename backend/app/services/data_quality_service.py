@@ -1,5 +1,6 @@
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Tuple
+from backend.app.core.config import settings
 from backend.app.models.person import CompletenessStatus, PopulationClassification
 from backend.app.models.screening import EpistemicStatus
 
@@ -12,8 +13,8 @@ class DataQualityService:
     """
 
     # Stale Thresholds: Observations older than this are classified as OUTDATED
-    VITALS_MAX_RECENCY_DAYS = 365       # 12 months
-    SCREENING_MAX_RECENCY_DAYS = 1095    # 36 months (IFHAS 3-year cycle)
+    VITALS_MAX_RECENCY_DAYS = getattr(settings, "DATA_QUALITY_VITALS_MAX_RECENCY_DAYS", 365)       # 12 months
+    SCREENING_MAX_RECENCY_DAYS = getattr(settings, "DATA_QUALITY_SCREENING_MAX_RECENCY_DAYS", 1095) # 36 months (IFHAS 3-year cycle)
 
     @classmethod
     def evaluate_observation_epistemic_status(
@@ -77,15 +78,16 @@ class DataQualityService:
                 if t1.tzinfo is None: t1 = t1.replace(tzinfo=timezone.utc)
                 if t2.tzinfo is None: t2 = t2.replace(tzinfo=timezone.utc)
                 
-                # If measurements are within 48 hours
-                if abs((t2 - t1).total_seconds()) <= 172800:
+                # If measurements are within configured conflict window
+                window_sec = getattr(settings, "DATA_QUALITY_CONFLICT_WINDOW_HOURS", 48) * 3600
+                conflict_ratio = getattr(settings, "DATA_QUALITY_CONFLICT_THRESHOLD_PERCENT", 30.0) / 100.0
+                if abs((t2 - t1).total_seconds()) <= window_sec:
                     v1 = obs1.get("canonical_value")
                     v2 = obs2.get("canonical_value")
                     if v1 is not None and v2 is not None:
-                        # Conflict if variance exceeds 30% for vitals
                         diff = abs(v1 - v2)
                         avg = (v1 + v2) / 2.0
-                        if avg > 0 and (diff / avg) > 0.30:
+                        if avg > 0 and (diff / avg) > conflict_ratio:
                             return True
         return False
 
