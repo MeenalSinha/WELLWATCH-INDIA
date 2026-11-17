@@ -1,5 +1,5 @@
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from backend.app.models.person import CompletenessStatus, PopulationClassification
 from backend.app.models.screening import EpistemicStatus
 
