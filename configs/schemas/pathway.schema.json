@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PreventivePathwayDefinition",
+  "description": "Schema for versioned, authoritative preventive care pathway definitions in Abu Dhabi.",
+  "type": "object",
+  "required": [
+    "pathway_id",
+    "name",
+    "version",
+    "population",
+    "publishing_authority",
+    "effective_date",
+    "status",
+    "milestones"
+  ],
+  "properties": {
+    "pathway_id": { "type": "string" },
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "population": { "type": "string", "enum": ["PEDIATRIC", "ADULT", "GERIATRIC", "ALL"] },
+    "publishing_authority": { "type": "string" },
+    "guideline_reference": { "type": "string" },
+    "effective_date": { "type": "string", "format": "date" },
+    "status": { "type": "string", "enum": ["DRAFT", "UNDER_REVIEW", "APPROVED", "ACTIVE", "SUSPENDED", "RETIRED"] },
+    "eligibility_criteria": {
+      "type": "object",
+      "properties": {
+        "min_age_months": { "type": "integer" },
+        "max_age_months": { "type": "integer" },
+        "min_age_years": { "type": "integer" },
+        "max_age_years": { "type": "integer" },
+        "gender": { "type": "string", "enum": ["ALL", "MALE", "FEMALE"] },
+        "coverage_requirement": { "type": "string" }
+      }
+    },
+    "milestones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["milestone_id", "name", "target_window"],
+        "properties": {
+          "milestone_id": { "type": "string" },
+          "name": { "type": "string" },
+          "target_window": {
+            "type": "object",
+            "properties": {
+              "target_age_months": { "type": "integer" },
+              "min_age_months": { "type": "integer" },
+              "max_age_months": { "type": "integer" },
+              "interval_months": { "type": "integer" }
+            }
+          },
+          "required_components": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -29,3 +29,7 @@ class Permission(str, enum.Enum):
     # Data Governance & Privacy
     AUDIT_READ = "audit:read"
     CONSENT_AUDIT = "consent:audit"
+
+    # Genomic Intelligence (Phase 8)
+    GENOMIC_DATA_READ = "genomic:read"
+    GENOMIC_DATA_WRITE = "genomic:write"

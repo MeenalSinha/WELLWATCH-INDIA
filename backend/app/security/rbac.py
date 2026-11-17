@@ -31,6 +31,8 @@ ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
         Permission.CLINICAL_REVIEW,
         Permission.PATHWAY_APPROVE,
         Permission.GAP_RESOLVE,
+        Permission.GENOMIC_DATA_READ,
+        Permission.GENOMIC_DATA_WRITE,
     },
     UserRole.CARE_COORDINATOR: {
         Permission.SCREENING_READ_SCOPED,
@@ -140,3 +142,13 @@ def enforce_organization_boundary(user: User, target_org_id: str):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: cross-organizational record access is strictly forbidden.",
         )
+
+
+def has_permission(role: str, perm: Permission) -> bool:
+    """Checks whether a role string has the given permission."""
+    try:
+        user_role = UserRole(role)
+        return perm in ROLE_PERMISSIONS.get(user_role, set())
+    except (ValueError, TypeError):
+        return False
+

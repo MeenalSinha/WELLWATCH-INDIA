@@ -237,8 +237,56 @@ backend/tests/test_security_headers.py::test_correlation_id_middleware_direct PA
 
 All technical, clinical, and architectural documentation is maintained within the `docs/` directory:
 
-### Final Audit Report
-- [Phases 0 to 3 Final Verification and Audit Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/PHASE_0_TO_3_FINAL_AUDIT.md)
+### Verification & Audit Reports
+- [Phases 4 to 8 Final Master Audit and Evidence Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/PHASE_4_TO_8_FINAL_AUDIT.md)
+- [Phases 0 to 3 Independent Re-verification Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/PHASE_0_TO_3_REVERIFICATION.md)
+- [Phases 0 to 3 Baseline Verification and Audit Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/PHASE_0_TO_3_FINAL_AUDIT.md)
+
+### Phase 4: Healthcare Database & Longitudinal Foundation (`docs/phase4/`)
+- [Longitudinal Data Architecture](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase4/LONGITUDINAL_DATA_ARCHITECTURE.md)
+- [Database ERD](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase4/DATABASE_ERD.md)
+- [Data Provenance Implementation](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase4/DATA_PROVENANCE_IMPLEMENTATION.md)
+- [Data Quality and Epistemic Model](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase4/DATA_QUALITY_AND_EPISTEMIC_MODEL.md)
+- [Migration Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase4/MIGRATION_REPORT.md)
+- [Phase 4 Completion Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase4/PHASE_4_COMPLETION_REPORT.md)
+
+### Phase 5: Life-Course Patient Intelligence (`docs/phase5/`)
+- [Patient Intelligence Architecture](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase5/PATIENT_INTELLIGENCE_ARCHITECTURE.md)
+- [Pediatric Profile Specification](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase5/PEDIATRIC_PROFILE_SPECIFICATION.md)
+- [Adult Profile Specification](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase5/ADULT_PROFILE_SPECIFICATION.md)
+- [Patient Timeline Specification](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase5/PATIENT_TIMELINE_SPECIFICATION.md)
+- [Patient Access Control](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase5/PATIENT_ACCESS_CONTROL.md)
+- [Phase 5 Completion Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase5/PHASE_5_COMPLETION_REPORT.md)
+
+### Phase 6: Abu Dhabi Preventive Pathway Engine (`docs/phase6/`)
+- [Preventive Pathway Engine Specification](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase6/PREVENTIVE_PATHWAY_ENGINE.md)
+- [Child Well-Child Pathway](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase6/CHILD_WELL_CHILD_PATHWAY.md)
+- [Adult IFHAS Pathway](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase6/ADULT_IFHAS_PATHWAY.md)
+- [Clinical Rule Governance](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase6/CLINICAL_RULE_GOVERNANCE.md)
+- [Rule Evaluation Specification](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase6/RULE_EVALUATION_SPECIFICATION.md)
+- [Clinical Source Register](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase6/CLINICAL_SOURCE_REGISTER.md)
+- [Phase 6 Completion Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase6/PHASE_6_COMPLETION_REPORT.md)
+
+### Phase 7: Explainable Preventive Risk Intelligence (`docs/phase7/`)
+- [Preventive Intelligence Architecture](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase7/PREVENTIVE_INTELLIGENCE_ARCHITECTURE.md)
+- [Assessment Model Specification](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase7/ASSESSMENT_MODEL.md)
+- [Explainability Framework](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase7/EXPLAINABILITY_FRAMEWORK.md)
+- [Uncertainty and Abstention Engine](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase7/UNCERTAINTY_AND_ABSTENTION.md)
+- [Human Review Workflow](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase7/HUMAN_REVIEW_WORKFLOW.md)
+- [Phase 7 Completion Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase7/PHASE_7_COMPLETION_REPORT.md)
+
+### Phase 8: Machine Learning & Genomic Intelligence (`docs/phase8/`)
+- [ML Architecture](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase8/ML_ARCHITECTURE.md)
+- [Dataset Governance](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase8/DATASET_GOVERNANCE.md)
+- [Model Training Specification](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase8/MODEL_TRAINING_SPECIFICATION.md)
+- [Model Evaluation Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase8/MODEL_EVALUATION_REPORT.md)
+- [Calibration Specification](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase8/CALIBRATION_SPECIFICATION.md)
+- [Explainable ML Framework](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase8/EXPLAINABLE_ML_FRAMEWORK.md)
+- [Model Registry Specification](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase8/MODEL_REGISTRY_SPECIFICATION.md)
+- [Inference Architecture](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase8/INFERENCE_ARCHITECTURE.md)
+- [Genomic Intelligence Architecture](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase8/GENOMIC_INTELLIGENCE_ARCHITECTURE.md)
+- [Genomic Data Governance & VUS Safety](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase8/GENOMIC_DATA_GOVERNANCE.md)
+- [Phase 8 Completion Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/phase8/PHASE_8_COMPLETION_REPORT.md)
 
 ### Phase 0: Audit & Baseline Reports (`docs/audit/`)
 - [Project Audit](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/audit/PROJECT_AUDIT.md)

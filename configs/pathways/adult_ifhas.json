@@ -1,0 +1,73 @@
+{
+  "pathway_id": "ADPHC-ADULT-IFHAS-V1",
+  "name": "Abu Dhabi Adult Comprehensive Preventive Screening Programme (IFHAS)",
+  "version": "2.1.0",
+  "population": "ADULT",
+  "publishing_authority": "Abu Dhabi Public Health Centre (ADPHC) & Department of Health Abu Dhabi (DoH)",
+  "guideline_reference": "ADPHC IFHAS Standards for Comprehensive Periodic Health Examination",
+  "effective_date": "2024-01-01",
+  "status": "ACTIVE",
+  "eligibility_criteria": {
+    "min_age_years": 18,
+    "max_age_years": 120,
+    "gender": "ALL",
+    "cycle_interval_months": 36,
+    "coverage_requirement": "ALL_ADULTS_IN_ABU_DHABI"
+  },
+  "milestones": [
+    {
+      "milestone_id": "IFHAS-CARDIOVASCULAR",
+      "name": "Cardiovascular Risk & Hypertension Screening",
+      "target_window": { "interval_months": 36, "min_age_years": 18 },
+      "required_components": ["Blood Pressure (Systolic & Diastolic)", "Heart Rate", "BMI & Waist Circumference", "Atherosclerotic CVD Risk Calculation"]
+    },
+    {
+      "milestone_id": "IFHAS-DIABETES",
+      "name": "Diabetes Mellitus & Prediabetes Screening",
+      "target_window": { "interval_months": 36, "min_age_years": 18 },
+      "required_components": ["Fasting Blood Glucose (LOINC 2339-0)", "HbA1c (LOINC 4548-4)"]
+    },
+    {
+      "milestone_id": "IFHAS-LIPID",
+      "name": "Dyslipidemia Screening Panel",
+      "target_window": { "interval_months": 36, "min_age_years": 20 },
+      "required_components": ["Total Cholesterol", "HDL Cholesterol", "LDL Cholesterol", "Triglycerides"]
+    },
+    {
+      "milestone_id": "IFHAS-COLORECTAL-CANCER",
+      "name": "Colorectal Cancer Screening",
+      "target_window": { "interval_months": 24, "min_age_years": 40, "max_age_years": 75 },
+      "required_components": ["Fecal Immunochemical Test (FIT) every 2 years OR Colonoscopy every 10 years"]
+    },
+    {
+      "milestone_id": "IFHAS-BREAST-CANCER",
+      "name": "Breast Cancer Screening",
+      "target_window": { "interval_months": 24, "min_age_years": 40, "max_age_years": 69, "gender": "FEMALE" },
+      "required_components": ["Bilateral Digital Screening Mammography every 2 years", "Clinical Breast Examination"]
+    },
+    {
+      "milestone_id": "IFHAS-CERVICAL-CANCER",
+      "name": "Cervical Cancer Screening",
+      "target_window": { "interval_months": 36, "min_age_years": 25, "max_age_years": 65, "gender": "FEMALE" },
+      "required_components": ["Cervical Cytology (Pap Smear) every 3 years OR High-Risk HPV DNA Co-Testing every 5 years"]
+    },
+    {
+      "milestone_id": "IFHAS-LIFESTYLE-ASSESSMENT",
+      "name": "Behavioral & Lifestyle Risk Evaluation",
+      "target_window": { "interval_months": 36, "min_age_years": 18 },
+      "required_components": ["Tobacco Smoking Assessment", "Physical Activity Scoring", "Nutritional Evaluation", "Sleep Health"]
+    },
+    {
+      "milestone_id": "IFHAS-MENTAL-HEALTH",
+      "name": "Mental Health & Emotional Well-Being Screening",
+      "target_window": { "interval_months": 36, "min_age_years": 18 },
+      "required_components": ["PHQ-2 / PHQ-9 Depression Screening", "Generalized Anxiety Assessment"]
+    },
+    {
+      "milestone_id": "IFHAS-ORAL-HEALTH",
+      "name": "Periodic Oral & Dental Health Check",
+      "target_window": { "interval_months": 12, "min_age_years": 18 },
+      "required_components": ["Clinical Oral Cavity Examination", "Periodontal Risk Assessment", "Dental Caries Check"]
+    }
+  ]
+}

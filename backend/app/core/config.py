@@ -54,5 +54,15 @@ class Settings(BaseSettings):
             raise ValueError("SECRET_KEY must be at least 32 characters long.")
         return v
 
+    @classmethod
+    def validate_production_settings(cls, settings_instance: "Settings") -> None:
+        """Fail-safe check ensuring production environments do not use development defaults."""
+        if settings_instance.ENVIRONMENT.lower() == "production":
+            if "development" in settings_instance.SECRET_KEY.lower() or settings_instance.SECRET_KEY == "wellwatch-prevent-secure-development-secret-key-32chars-min":
+                raise ValueError("CRITICAL SECURITY ERROR: In production, SECRET_KEY must be explicitly set and cannot use the development default.")
+            if settings_instance.DATABASE_URL.startswith("sqlite"):
+                raise ValueError("CRITICAL SECURITY ERROR: In production, DATABASE_URL must point to a production-grade database (e.g. PostgreSQL), not SQLite.")
+
 
 settings = Settings()
+settings.validate_production_settings(settings)

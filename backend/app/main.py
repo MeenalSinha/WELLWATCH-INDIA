@@ -16,9 +16,12 @@ from backend.app.middleware.security_headers import SecurityHeadersMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifecycle manager."""
-    logger.info("Initializing WellWatch Prevent database schema...")
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database schema initialized successfully.")
+    if settings.ENVIRONMENT.lower() == "production":
+        logger.info("Production mode: Verifying schema via migrations. Automatic Base.metadata.create_all is disabled in production.")
+    else:
+        logger.info("Development mode: Ensuring local database tables exist...")
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database schema initialized successfully.")
     yield
     logger.info("Shutting down WellWatch Prevent application.")
 
