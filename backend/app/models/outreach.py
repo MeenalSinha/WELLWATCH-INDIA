@@ -24,6 +24,16 @@ class CommunicationChannel(str, enum.Enum):
     WHATSAPP = "WHATSAPP"
 
 
+class OutreachAuthorizationStatus(str, enum.Enum):
+    NOT_PROVIDED = "NOT_PROVIDED"
+    PENDING = "PENDING"
+    AUTHORIZED = "AUTHORIZED"
+    OPTED_OUT = "OPTED_OUT"
+    REVOKED = "REVOKED"
+    EXPIRED = "EXPIRED"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+
+
 class OutreachDeliveryStatus(str, enum.Enum):
     DRAFT = "DRAFT"
     PENDING = "PENDING"
@@ -48,7 +58,12 @@ class CommunicationPreference(BaseDBModel):
     contact_window_end = Column(String(10), nullable=False, default="19:00")
     quiet_hours_start = Column(String(10), nullable=False, default="21:00")
     quiet_hours_end = Column(String(10), nullable=False, default="08:00")
-    consent_opt_in = Column(Boolean, nullable=False, default=True)
+    consent_opt_in = Column(Boolean, nullable=False, default=False)
+    authorization_status = Column(
+        SQLEnum(OutreachAuthorizationStatus),
+        nullable=False,
+        default=OutreachAuthorizationStatus.NOT_PROVIDED,
+    )
     opt_out_timestamp = Column(DateTime, nullable=True)
     guardian_proxy_required = Column(Boolean, nullable=False, default=False)
     accessibility_needs = Column(JSON, nullable=True)
@@ -93,3 +108,22 @@ class OutreachTask(BaseDBModel):
         Index("ix_outreach_person_status", "person_id", "delivery_status"),
         Index("ix_outreach_scheduled", "scheduled_at", "delivery_status"),
     )
+
+
+class InAppNotification(BaseDBModel):
+    __tablename__ = "in_app_notifications"
+
+    organization_id = Column(String(36), ForeignKey("organizations.id"), nullable=False, index=True)
+    person_id = Column(String(36), ForeignKey("persons.id"), nullable=False, index=True)
+    recipient_user_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    outreach_task_id = Column(String(36), ForeignKey("outreach_tasks.id"), nullable=True, index=True)
+    title = Column(String(255), nullable=False)
+    message_body = Column(Text, nullable=False)
+    is_read = Column(Boolean, nullable=False, default=False, index=True)
+    read_at = Column(DateTime, nullable=True)
+
+    # Relationships
+    person = relationship("Person", backref="in_app_notifications")
+    recipient_user = relationship("User")
+    outreach_task = relationship("OutreachTask", backref="in_app_notifications")
+

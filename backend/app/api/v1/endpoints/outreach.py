@@ -15,6 +15,7 @@ from backend.app.schemas.outreach import (
     OutreachAnalyticsResponse,
     TemplatePreviewRequest,
     TemplatePreviewResponse,
+    InAppNotificationResponse,
 )
 from backend.app.services.outreach_service import OutreachService
 
@@ -110,7 +111,14 @@ def preview_template(
 ):
     """
     Preview approved Arabic or English template with variable substitutions and RTL/LTR direction.
+    Checks actual governance approval status from template registry.
     """
+    templates = OutreachService.load_templates()
+    tmpl = templates.get(payload.template_id)
+    if not tmpl:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Template {payload.template_id} not found")
+    is_approved = tmpl.get("governance_approved", False)
+
     subj, body, direction = OutreachService.render_template(
         template_id=payload.template_id,
         language=payload.language,
@@ -122,8 +130,40 @@ def preview_template(
         direction=direction,
         rendered_subject=subj,
         rendered_body=body,
-        governance_approved=True,
+        governance_approved=is_approved,
     )
+
+
+@router.get("/inbox", response_model=list[InAppNotificationResponse])
+def get_inbox(
+    person_id: Optional[str] = Query(None, description="Patient person ID"),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Retrieves genuinely persisted in-app notifications for patient or guardian portal.
+    """
+    return OutreachService.get_inbox(
+        db=db,
+        person_id=person_id,
+        recipient_user_id=current_user.id,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.patch("/inbox/{notification_id}/read", response_model=InAppNotificationResponse)
+def mark_inbox_read(
+    notification_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Marks an in-app notification as read.
+    """
+    return OutreachService.mark_notification_read(db, notification_id, current_user)
 
 
 @router.get("/analytics", response_model=OutreachAnalyticsResponse)

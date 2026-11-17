@@ -116,6 +116,17 @@ class FollowUpTaskResponse(BaseModel):
 
 
 # Recall Schemas
+class RecallTaskCreate(BaseModel):
+    person_id: str
+    pathway_id: str
+    screening_type: str
+    due_date: datetime
+
+
+class RecallStatusUpdate(BaseModel):
+    status: RecallStatus
+
+
 class RecallTaskResponse(BaseModel):
     id: str
     organization_id: str

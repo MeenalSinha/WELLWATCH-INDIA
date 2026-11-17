@@ -9,9 +9,11 @@ from backend.app.models.navigation import (
     Appointment,
     Referral,
     FollowUpTask,
+    RecallTask,
     AppointmentStatus,
     ReferralStatus,
     FollowUpStatus,
+    RecallStatus,
 )
 from backend.app.schemas.navigation import (
     AppointmentCreate,
@@ -23,6 +25,9 @@ from backend.app.schemas.navigation import (
     FollowUpTaskCreate,
     FollowUpTaskResponse,
     FollowUpResolveRequest,
+    RecallTaskCreate,
+    RecallStatusUpdate,
+    RecallTaskResponse,
     CareGapClosureRequest,
     CareGapClosureResponse,
     NavigationAnalyticsResponse,
@@ -236,3 +241,64 @@ def get_navigation_analytics(
         organization_id=current_user.organization_id if current_user.role.value != "SYSTEM_ADMIN" else None,
     )
     return NavigationAnalyticsResponse(**stats)
+
+
+# Screening Recalls
+@router.post("/recalls", response_model=RecallTaskResponse, status_code=status.HTTP_201_CREATED)
+def create_recall_task(
+    payload: RecallTaskCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Schedule an automated recall task for due/overdue screening.
+    """
+    return NavigationService.create_recall_task(
+        db=db,
+        person_id=payload.person_id,
+        pathway_id=payload.pathway_id,
+        screening_type=payload.screening_type,
+        due_date=payload.due_date,
+        current_user=current_user,
+    )
+
+
+@router.get("/recalls", response_model=List[RecallTaskResponse])
+def list_recalls(
+    person_id: Optional[str] = Query(None),
+    status: Optional[RecallStatus] = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    List screening recall tasks scoped by organization.
+    """
+    org_id = current_user.organization_id if current_user.role.value != "SYSTEM_ADMIN" else None
+    return NavigationService.get_recalls(
+        db=db,
+        person_id=person_id,
+        organization_id=org_id,
+        status=status,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.patch("/recalls/{recall_id}/status", response_model=RecallTaskResponse)
+def update_recall_status(
+    recall_id: str,
+    payload: RecallStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Update recall status (SCHEDULED, NOTIFIED, COMPLETED, OVERDUE, CANCELLED).
+    """
+    return NavigationService.update_recall_status(
+        db=db,
+        recall_id=recall_id,
+        new_status=payload.status,
+        current_user=current_user,
+    )

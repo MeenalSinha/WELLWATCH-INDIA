@@ -65,7 +65,9 @@ from backend.app.models.recommendation import (
 from backend.app.models.outreach import (
     CommunicationPreference,
     OutreachTask,
+    InAppNotification,
     CommunicationChannel,
+    OutreachAuthorizationStatus,
     OutreachDeliveryStatus,
 )
 # Phase 11: Care Navigation
@@ -149,7 +151,9 @@ __all__ = [
     # Phase 10
     "CommunicationPreference",
     "OutreachTask",
+    "InAppNotification",
     "CommunicationChannel",
+    "OutreachAuthorizationStatus",
     "OutreachDeliveryStatus",
     # Phase 11
     "Appointment",

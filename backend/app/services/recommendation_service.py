@@ -1,16 +1,17 @@
 import os
 import json
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import List, Dict, Any, Optional, Tuple
+from datetime import datetime, timedelta, timezone, date
+from typing import List, Dict, Any, Optional, Tuple, Set
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from backend.app.models.person import Person
 from backend.app.models.user import User, UserRole
-from backend.app.models.assessment import PreventiveAssessment, ClinicalRiskTier
+from backend.app.models.assessment import PreventiveAssessment, ClinicalRiskTier, AssessmentStatus
+from backend.app.models.clinical import ScreeningRecord, ClinicalObservation, ScreeningStatus
 from backend.app.models.screening import EpistemicStatus
-from backend.app.models.genomics import GenomicFinding, VariantClassification
+from backend.app.models.genomics import GenomicFinding, VariantClassification, GenomicReviewStatus
 from backend.app.models.recommendation import (
     PreventiveRecommendation,
     RecommendationReview,
@@ -22,8 +23,7 @@ from backend.app.models.recommendation import (
 )
 from backend.app.models.audit import AuditOutcome
 from backend.app.services.audit_service import AuditService
-from backend.app.services.pathway_engine import PathwayEngine
-from backend.app.services.clinical_validation_service import ClinicalValidationService
+from backend.app.services.pathway_engine import PathwayEngine, CareGapStatus
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,13 @@ RULES_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
     "configs",
     "recommendation_rules",
+)
+
+SCHEMA_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+    "configs",
+    "schemas",
+    "recommendation_rules.schema.json",
 )
 
 
@@ -43,26 +50,72 @@ class RecommendationService:
 
     @classmethod
     def load_rules(cls) -> List[Dict[str, Any]]:
+        """
+        Loads, validates, and caches governed recommendation rules.
+        Enforces schema validation, approval status, and duplicate rule_id detection.
+        """
         if cls._rules_cache:
             return cls._rules_cache
 
-        all_rules = []
-        if os.path.exists(RULES_DIR):
-            for fname in os.listdir(RULES_DIR):
-                if fname.endswith(".json"):
-                    fpath = os.path.join(RULES_DIR, fname)
-                    try:
-                        with open(fpath, "r", encoding="utf-8") as f:
-                            data = json.load(f)
-                            rules = data.get("rules", [])
-                            all_rules.extend(rules)
-                    except Exception as e:
-                        logger.error(f"Error loading recommendation rules from {fpath}: {e}")
+        all_rules: List[Dict[str, Any]] = []
+        seen_rule_ids: Set[str] = set()
+
+        if not os.path.exists(RULES_DIR):
+            logger.warning(f"Recommendation rules directory {RULES_DIR} does not exist.")
+            cls._rules_cache = []
+            return cls._rules_cache
+
+        rule_files = sorted([f for f in os.listdir(RULES_DIR) if f.endswith(".json")])
+        for fname in rule_files:
+            fpath = os.path.join(RULES_DIR, fname)
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+
+                rules = data.get("rules", [])
+                for rule in rules:
+                    # Validate required schema fields
+                    rule_id = rule.get("rule_id")
+                    if not rule_id:
+                        raise ValueError(f"Rule in {fname} missing required 'rule_id'")
+
+                    # Duplicate detection across files
+                    if rule_id in seen_rule_ids:
+                        raise ValueError(f"Duplicate recommendation rule_id '{rule_id}' detected across rule files.")
+                    seen_rule_ids.add(rule_id)
+
+                    # Required schema attributes
+                    required_fields = [
+                        "rule_version",
+                        "category",
+                        "pathway_id",
+                        "trigger_condition",
+                        "default_priority",
+                        "recommended_action",
+                        "clinical_rationale",
+                        "source_guideline",
+                        "requires_human_review",
+                    ]
+                    for rf in required_fields:
+                        if rf not in rule:
+                            raise ValueError(f"Rule '{rule_id}' in {fname} missing required field '{rf}'")
+
+                    # Approval governance check
+                    approval_status = rule.get("approval_status", "APPROVED")
+                    if approval_status != "APPROVED":
+                        logger.info(f"Skipping unapproved rule '{rule_id}' with status '{approval_status}'")
+                        continue
+
+                    all_rules.append(rule)
+            except Exception as e:
+                logger.error(f"Error loading and validating recommendation rules from {fpath}: {e}")
+                raise e
+
         cls._rules_cache = all_rules
         return cls._rules_cache
 
     @classmethod
-    def reload_rules(cls):
+    def reload_rules(cls) -> List[Dict[str, Any]]:
         cls._rules_cache = []
         return cls.load_rules()
 
@@ -72,6 +125,12 @@ class RecommendationService:
         person_id: str,
         current_user: User,
     ) -> List[PreventiveRecommendation]:
+        """
+        Generates evidence-backed preventive recommendations for a patient.
+        Strictly decouples eligibility from confirmed care gaps.
+        Consumes Phase 6 pathway evaluations and Phase 7 assessments.
+        Propagates epistemic uncertainty rather than defaulting to confirmed.
+        """
         person = db.query(Person).filter(Person.id == person_id).first()
         if not person:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
@@ -89,10 +148,17 @@ class RecommendationService:
             .first()
         )
 
-        # Fetch approved genomic findings
+        # Fetch reviewed genomic findings
         genomic_findings = (
             db.query(GenomicFinding)
-            .filter(GenomicFinding.patient_id == person_id)
+            .filter(
+                GenomicFinding.patient_id == person_id,
+                GenomicFinding.review_status == GenomicReviewStatus.GENETIC_COUNSELOR_VERIFIED,
+                GenomicFinding.variant_classification.in_([
+                    VariantClassification.PATHOGENIC,
+                    VariantClassification.LIKELY_PATHOGENIC,
+                ])
+            )
             .all()
         )
 
@@ -100,24 +166,70 @@ class RecommendationService:
         created_recommendations = []
         now = datetime.now(timezone.utc)
 
-        # Identify applicable care gaps & epistemic uncertainty
-        care_gaps_identified = []
-        epistemic_status = "CONFIRMED"
+        care_gaps_identified: List[str] = []
+        epistemic_status = "ROBUST"
         assessment_id = None
-        evidence_dict = {}
+        evidence_dict: Dict[str, Any] = {}
 
+        # 1. Evaluate longitudinal clinical pathway through PathwayEngine
+        pathway_key = "pediatric_well_child" if person.is_pediatric else "adphc_ifhas"
+        pathway_def = PathwayEngine.load_pathway(pathway_key)
+        
+        pathway_care_gaps = []
+        if pathway_def:
+            pathway_care_gaps = PathwayEngine.evaluate_care_gaps(db=db, pathway=pathway_def, person=person)
+
+        # Check for confirmed DUE/OVERDUE milestones vs NEEDS_DATA
+        for gap in pathway_care_gaps:
+            gap_status = gap.get("status")
+            m_id = gap.get("milestone_id", "")
+            
+            if gap_status in [CareGapStatus.DUE.value, CareGapStatus.OVERDUE.value]:
+                if person.is_pediatric:
+                    care_gaps_identified.append("GAP-WELL-CHILD-DUE")
+                    components = gap.get("components", [])
+                    if any("VACCIN" in str(c).upper() for c in components):
+                        care_gaps_identified.append("GAP-VACCINATION-DUE")
+                else:
+                    if "IFHAS" in m_id:
+                        care_gaps_identified.append("GAP-IFHAS-COMPREHENSIVE")
+                    if "CARDIOVASCULAR" in m_id or "CARDIOMETABOLIC" in m_id:
+                        care_gaps_identified.append("GAP-BP-OVERDUE")
+                    if "DIABETES" in m_id:
+                        care_gaps_identified.append("GAP-DM-GLUCOSE-OVERDUE")
+                    if "COLORECTAL" in m_id:
+                        care_gaps_identified.append("GAP-COLORECTAL-FIT-DUE")
+                    if "BREAST" in m_id and getattr(person.gender, "value", str(person.gender)) == "FEMALE":
+                        care_gaps_identified.append("GAP-BREAST-MAMMO-DUE")
+            elif gap_status in [CareGapStatus.NEEDS_DATA.value, CareGapStatus.POTENTIALLY_OVERDUE.value]:
+                epistemic_status = "NEEDS_DATA"
+
+        # 2. Consume Phase 7 Assessment if available
         if latest_assessment:
             assessment_id = latest_assessment.id
             evidence_dict["assessment_id"] = latest_assessment.id
-            evidence_dict["clinical_risk_tier"] = latest_assessment.clinical_risk_tier.value if hasattr(latest_assessment.clinical_risk_tier, "value") else str(latest_assessment.clinical_risk_tier)
-            
+            evidence_dict["clinical_risk_tier"] = (
+                latest_assessment.clinical_risk_tier.value
+                if hasattr(latest_assessment.clinical_risk_tier, "value")
+                else str(latest_assessment.clinical_risk_tier)
+            )
+
+            # Epistemic check on assessment
+            if latest_assessment.clinical_risk_tier == ClinicalRiskTier.INSUFFICIENT_DATA or latest_assessment.assessment_status == AssessmentStatus.NEEDS_DATA:
+                epistemic_status = "NEEDS_DATA"
+                evidence_dict["epistemic_abstention"] = True
+
+            # Parse contributing factors for clinical risk indicators
             try:
-                factors = json.loads(latest_assessment.contributing_factors) if isinstance(latest_assessment.contributing_factors, str) else (latest_assessment.contributing_factors or [])
+                factors = (
+                    json.loads(latest_assessment.contributing_factors)
+                    if isinstance(latest_assessment.contributing_factors, str)
+                    else (latest_assessment.contributing_factors or [])
+                )
             except Exception:
                 factors = []
             evidence_dict["risk_indicators"] = factors
-            
-            # Extract care gaps from assessment
+
             for ind in factors:
                 if isinstance(ind, dict):
                     ind_name = ind.get("indicator", "") or ind.get("factor", "")
@@ -125,30 +237,46 @@ class RecommendationService:
                         care_gaps_identified.append("GAP-BP-OVERDUE")
                     elif "GLUCOSE" in ind_name or "DIABETES" in ind_name:
                         care_gaps_identified.append("GAP-DM-GLUCOSE-OVERDUE")
-
-        # Evaluate pediatric vs adult pathways
-        if person.is_pediatric:
-            care_gaps_identified.append("GAP-WELL-CHILD-DUE")
         else:
-            care_gaps_identified.append("GAP-IFHAS-COMPREHENSIVE")
+            # Check if any observations exist
+            obs_count = db.query(ClinicalObservation).filter(ClinicalObservation.patient_id == person_id).count()
+            if obs_count == 0:
+                epistemic_status = "NEEDS_DATA"
+                evidence_dict["baseline_data_missing"] = True
 
-        # Check genomic findings
+        # 3. Consume Verified Actionable Genomic Findings
         for gf in genomic_findings:
-            if gf.variant_classification in [VariantClassification.PATHOGENIC, VariantClassification.LIKELY_PATHOGENIC]:
-                care_gaps_identified.append("GAP-GENOMIC-COUNSELING-DUE")
-                if "LDLR" in (gf.gene_symbol or ""):
-                    care_gaps_identified.append("GAP-LIPID-SPECIALIST-EVALUATION")
+            care_gaps_identified.append("GAP-GENOMIC-COUNSELING-DUE")
+            # Map specific gene actions through governed rules matching
+            for r in rules:
+                rule_trigger = r.get("trigger_condition", {})
+                req_gene = rule_trigger.get("gene_symbol")
+                if req_gene and req_gene.upper() == (gf.gene_symbol or "").upper():
+                    gap_code = rule_trigger.get("care_gap_code")
+                    if gap_code:
+                        care_gaps_identified.append(gap_code)
+
+        evidence_dict["care_gaps_identified"] = list(set(care_gaps_identified))
+        evidence_dict["epistemic_status"] = epistemic_status
 
         # Query existing active recommendations for this patient to prevent duplicate active recs
+        active_statuses = [
+            RecommendationLifecycleStatus.DRAFT,
+            RecommendationLifecycleStatus.PENDING_CLINICAL_REVIEW,
+            RecommendationLifecycleStatus.APPROVED,
+            RecommendationLifecycleStatus.MODIFIED,
+            RecommendationLifecycleStatus.OFFERED,
+            RecommendationLifecycleStatus.ACCEPTED,
+            RecommendationLifecycleStatus.SCHEDULED,
+            RecommendationLifecycleStatus.IN_PROGRESS,
+            RecommendationLifecycleStatus.DECLINED,
+            RecommendationLifecycleStatus.COMPLETED,
+        ]
         existing_recs = (
             db.query(PreventiveRecommendation)
             .filter(
                 PreventiveRecommendation.person_id == person_id,
-                PreventiveRecommendation.lifecycle_status.notin_([
-                    RecommendationLifecycleStatus.CANCELLED,
-                    RecommendationLifecycleStatus.SUPERSEDED,
-                    RecommendationLifecycleStatus.COMPLETED,
-                ])
+                PreventiveRecommendation.lifecycle_status.in_(active_statuses),
             )
             .all()
         )
@@ -185,6 +313,8 @@ class RecommendationService:
             priority_str = rule.get("default_priority", "ROUTINE")
             priority = RecommendationPriority[priority_str]
 
+            uncertainty_val = "INSUFFICIENT_DATA_ABSTAINED" if epistemic_status == "NEEDS_DATA" else "ROBUST"
+
             rec = PreventiveRecommendation(
                 organization_id=person.primary_organization_id or current_user.organization_id,
                 person_id=person.id,
@@ -203,7 +333,7 @@ class RecommendationService:
                     "patient_age": person.age_years,
                 },
                 source_guideline=rule["source_guideline"],
-                uncertainty_status=epistemic_status,
+                uncertainty_status=uncertainty_val,
                 rule_id=rule_id,
                 rule_version=rule.get("rule_version", "1.0.0"),
                 target_date=target_date,
@@ -278,7 +408,7 @@ class RecommendationService:
         modifications: Optional[Dict[str, Any]] = None,
     ) -> PreventiveRecommendation:
         role_str = _get_role_str(reviewer_user)
-        # Clinical persona authorization check
+        # Strict Clinical Persona Authorization: System Admin CANNOT perform clinical review
         if role_str != UserRole.HEALTHCARE_PROVIDER.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -340,6 +470,14 @@ class RecommendationService:
     ) -> PreventiveRecommendation:
         rec = RecommendationService.get_recommendation_by_id(db, recommendation_id, current_user)
 
+        # State Machine Integrity
+        if rec.lifecycle_status in [RecommendationLifecycleStatus.CANCELLED, RecommendationLifecycleStatus.COMPLETED]:
+            if new_status not in [RecommendationLifecycleStatus.CANCELLED, RecommendationLifecycleStatus.COMPLETED]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Cannot transition finalized recommendation from '{rec.lifecycle_status.value}' to '{new_status.value}'.",
+                )
+
         # Validate decline reason
         if new_status == RecommendationLifecycleStatus.DECLINED and not declined_reason:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Declined recommendations require a documented reason.")
@@ -382,6 +520,23 @@ class RecommendationService:
         if not person:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
 
+        role_str = _get_role_str(current_user)
+        # Verify cross-organization access
+        if role_str != UserRole.SYSTEM_ADMIN.value and person.primary_organization_id and person.primary_organization_id != current_user.organization_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-organization care plan creation denied.")
+
+        # Strict validation of every recommendation ID
+        verified_recs: List[PreventiveRecommendation] = []
+        for rec_id in recommendation_ids:
+            rec = db.query(PreventiveRecommendation).filter(PreventiveRecommendation.id == rec_id).first()
+            if not rec:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Recommendation '{rec_id}' not found.")
+            if rec.person_id != person_id:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Recommendation '{rec_id}' does not belong to patient '{person_id}'.")
+            if role_str != UserRole.SYSTEM_ADMIN.value and rec.organization_id != current_user.organization_id:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Recommendation '{rec_id}' belongs to another healthcare organization.")
+            verified_recs.append(rec)
+
         care_plan = PreventiveCarePlan(
             organization_id=person.primary_organization_id or current_user.organization_id,
             person_id=person.id,
@@ -397,16 +552,18 @@ class RecommendationService:
         db.add(care_plan)
         db.flush()
 
-        for rec_id in recommendation_ids:
-            rec = db.query(PreventiveRecommendation).filter(PreventiveRecommendation.id == rec_id).first()
-            if rec:
-                item = CarePlanItem(
-                    care_plan_id=care_plan.id,
-                    recommendation_id=rec.id,
-                    status="PLANNED",
-                    target_date=rec.target_date,
-                )
-                db.add(item)
+        seen_rec_ids: Set[str] = set()
+        for rec in verified_recs:
+            if rec.id in seen_rec_ids:
+                continue
+            seen_rec_ids.add(rec.id)
+            item = CarePlanItem(
+                care_plan_id=care_plan.id,
+                recommendation_id=rec.id,
+                status="PLANNED",
+                target_date=rec.target_date,
+            )
+            db.add(item)
 
         db.commit()
         db.refresh(care_plan)
@@ -419,7 +576,7 @@ class RecommendationService:
             resource_id=care_plan.id,
             organization_id=care_plan.organization_id,
             outcome=AuditOutcome.SUCCESS,
-            details={"plan_name": plan_name, "pathway_id": pathway_id, "item_count": len(recommendation_ids)},
+            details={"plan_name": plan_name, "pathway_id": pathway_id, "item_count": len(seen_rec_ids)},
         )
         return care_plan
 
@@ -432,6 +589,10 @@ class RecommendationService:
         person = db.query(Person).filter(Person.id == person_id).first()
         if not person:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
+
+        role_str = _get_role_str(current_user)
+        if role_str != UserRole.SYSTEM_ADMIN.value and person.primary_organization_id and person.primary_organization_id != current_user.organization_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-organization care plan access denied.")
 
         plans = (
             db.query(PreventiveCarePlan)

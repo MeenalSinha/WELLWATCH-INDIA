@@ -84,7 +84,23 @@ class PathwayEngine:
                 try:
                     with open(filepath, "r", encoding="utf-8") as f:
                         data = json.load(f)
-                        if data.get("pathway_id") == pathway_id:
+                        pid = data.get("pathway_id", "")
+                        fname_base = filename[:-5].lower()
+                        target = pathway_id.lower()
+                        norm_target = pathway_id.lower().replace("_", "").replace("-", "")
+                        norm_pid = pid.lower().replace("_", "").replace("-", "")
+                        norm_fname = fname_base.lower().replace("_", "").replace("-", "")
+                        if (
+                            pid == pathway_id
+                            or fname_base == target
+                            or norm_target in norm_pid
+                            or norm_pid in norm_target
+                            or norm_target in norm_fname
+                            or norm_fname in norm_target
+                            or ("pediatric" in norm_target and "pediatric" in norm_fname)
+                            or ("ifhas" in norm_target and ("ifhas" in norm_fname or "ifhas" in norm_pid))
+                            or ("wellchild" in norm_target and "wellchild" in norm_fname)
+                        ):
                             return data
                 except Exception:
                     continue

@@ -5,6 +5,8 @@
     {
       "rule_id": "REC-ADULT-001",
       "rule_version": "1.0.0",
+      "approval_status": "APPROVED",
+      "effective_date": "2024-01-01",
       "category": "ADULT_COMPREHENSIVE_SCREENING",
       "pathway_id": "adphc_ifhas",
       "applicable_population": "adult",
@@ -21,6 +23,8 @@
     {
       "rule_id": "REC-ADULT-002",
       "rule_version": "1.0.0",
+      "approval_status": "APPROVED",
+      "effective_date": "2024-01-01",
       "category": "CARDIOMETABOLIC_SCREENING",
       "pathway_id": "adphc_ifhas",
       "applicable_population": "adult",
@@ -37,6 +41,8 @@
     {
       "rule_id": "REC-ADULT-003",
       "rule_version": "1.0.0",
+      "approval_status": "APPROVED",
+      "effective_date": "2024-01-01",
       "category": "PREVENTIVE_LABORATORY_SCREENING",
       "pathway_id": "adphc_ifhas",
       "applicable_population": "adult",
@@ -53,6 +59,8 @@
     {
       "rule_id": "REC-ADULT-004",
       "rule_version": "1.0.0",
+      "approval_status": "APPROVED",
+      "effective_date": "2024-01-01",
       "category": "ADDITIONAL_INFO_COLLECTION",
       "pathway_id": "adphc_ifhas",
       "applicable_population": "adult",

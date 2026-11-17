@@ -26,7 +26,9 @@ from backend.app.models.outreach import (
     OutreachTask,
     CommunicationChannel,
     OutreachDeliveryStatus,
+    OutreachAuthorizationStatus,
 )
+from backend.app.models.clinical import Encounter, EncounterType, EncounterStatus
 from backend.app.models.navigation import (
     Appointment,
     Referral,
@@ -123,6 +125,13 @@ def test_integrated_workflow_1_pediatric_prevention(db_session: Session):
     assert care_plan.status == "ACTIVE"
 
     # 6. Phase 10: Cultural Outreach in Arabic targeting legal guardian under Wadeema's Law
+    OutreachService.update_preference(
+        db=db_session,
+        person_id=child.id,
+        data={"consent_opt_in": True, "authorization_status": OutreachAuthorizationStatus.AUTHORIZED},
+        current_user=provider,
+    )
+
     outreach = OutreachService.schedule_outreach_task(
         db=db_session,
         person_id=child.id,
@@ -163,12 +172,24 @@ def test_integrated_workflow_1_pediatric_prevention(db_session: Session):
     )
 
     # 9. Module G: Verified Care-Gap Closure with verifiable encounter evidence
+    enc = Encounter(
+        patient_id=child.id,
+        facility_id=org.id,
+        provider_user_id=provider.id,
+        encounter_type=EncounterType.OUTPATIENT_PREVENTIVE,
+        status=EncounterStatus.COMPLETED,
+        clinical_notes="12-month developmental surveillance and MMR vaccination check confirmed.",
+    )
+    db_session.add(enc)
+    db_session.commit()
+    db_session.refresh(enc)
+
     closure = NavigationService.verify_and_close_care_gap(
         db=db_session,
         person_id=child.id,
         care_gap_id=reviewed_rec.care_gap_id or "GAP-WELL-CHILD-DUE",
         evidence_source="ENCOUNTER",
-        evidence_id="enc_well_child_12m_9831",
+        evidence_id=enc.id,
         verification_method="CLINICIAN_ATTESTATION",
         current_user=provider,
         recommendation_id=reviewed_rec.id,
@@ -245,6 +266,13 @@ def test_integrated_workflow_2_adult_preventive_screening(db_session: Session):
     )
 
     # 3. Cultural Outreach in Arabic
+    OutreachService.update_preference(
+        db=db_session,
+        person_id=adult.id,
+        data={"consent_opt_in": True, "authorization_status": OutreachAuthorizationStatus.AUTHORIZED},
+        current_user=provider,
+    )
+
     outreach = OutreachService.schedule_outreach_task(
         db=db_session,
         person_id=adult.id,
@@ -274,12 +302,24 @@ def test_integrated_workflow_2_adult_preventive_screening(db_session: Session):
     )
 
     # 5. Verified Care-Gap Closure with lab and screening record
+    enc = Encounter(
+        patient_id=adult.id,
+        facility_id=org.id,
+        provider_user_id=provider.id,
+        encounter_type=EncounterType.OUTPATIENT_PREVENTIVE,
+        status=EncounterStatus.COMPLETED,
+        clinical_notes="Completed IFHAS screening panel including fasting lipid panel and fasting glucose.",
+    )
+    db_session.add(enc)
+    db_session.commit()
+    db_session.refresh(enc)
+
     closure = NavigationService.verify_and_close_care_gap(
         db=db_session,
         person_id=adult.id,
         care_gap_id=ifhas_rec.care_gap_id or "GAP-IFHAS-COMPREHENSIVE",
-        evidence_source="SCREENING_RECORD",
-        evidence_id="scr_ifhas_2026_9901",
+        evidence_source="ENCOUNTER",
+        evidence_id=enc.id,
         verification_method="CLINICIAN_ATTESTATION",
         current_user=provider,
         recommendation_id=ifhas_rec.id,
@@ -371,6 +411,14 @@ def test_integrated_workflow_4_failed_outreach_and_retry(db_session: Session):
         date_of_birth=date.today() - timedelta(days=38 * 365),
         gender=Gender.MALE,
         organization_id=org.id,
+    )
+
+    # Explicit affirmative consent granted
+    OutreachService.update_preference(
+        db=db_session,
+        person_id=adult.id,
+        data={"consent_opt_in": True, "authorization_status": OutreachAuthorizationStatus.AUTHORIZED},
+        current_user=provider,
     )
 
     # Dispatch via unconfigured SMS gateway -> Honest provider boundary returns FAILED
@@ -470,12 +518,26 @@ def test_integrated_workflow_5_referral_not_completed_and_closure(db_session: Se
     assert resolved_task.status == FollowUpStatus.RESOLVED
 
     # 5. Final specialist consultation completed, evidence received -> care gap verified and closed
+    completed_ref = Referral(
+        organization_id=org.id,
+        person_id=adult.id,
+        referring_provider_id=provider.id,
+        specialty="Preventive Cardiology",
+        clinical_indication="Cardiology evaluation completed at SSMC, statin therapy initiated.",
+        priority="URGENT",
+        status=ReferralStatus.COMPLETED,
+        outcome_notes="Cardiology evaluation completed at SSMC, statin therapy initiated.",
+    )
+    db_session.add(completed_ref)
+    db_session.commit()
+    db_session.refresh(completed_ref)
+
     closure = NavigationService.verify_and_close_care_gap(
         db=db_session,
         person_id=adult.id,
         care_gap_id="GAP-LIPID-SPECIALIST-EVALUATION",
         evidence_source="REFERRAL_OUTCOME",
-        evidence_id="ssmc_cardio_report_4432",
+        evidence_id=completed_ref.id,
         verification_method="CLINICIAN_ATTESTATION",
         current_user=provider,
         verification_notes="Cardiology evaluation completed at SSMC, statin therapy initiated.",

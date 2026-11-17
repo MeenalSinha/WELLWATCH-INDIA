@@ -1,0 +1,22 @@
+{
+  "policy_version": "1.0.0",
+  "governance_authority": "Department of Health Abu Dhabi (DoH) Patient Communications & ADHICS v2",
+  "effective_date": "2024-01-01",
+  "contact_window": {
+    "start_time": "09:00",
+    "end_time": "19:00",
+    "timezone": "Asia/Dubai"
+  },
+  "quiet_hours": {
+    "start_time": "21:00",
+    "end_time": "08:00",
+    "timezone": "Asia/Dubai"
+  },
+  "duplicate_suppression": {
+    "suppression_window_days": 7
+  },
+  "retry_policy": {
+    "max_retries": 3,
+    "retry_interval_hours": 24
+  }
+}

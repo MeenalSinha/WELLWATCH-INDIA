@@ -293,3 +293,14 @@ def test_care_plan_creation_and_recommendation_linking(db_session: Session):
     plans = RecommendationService.get_care_plans_for_patient(db_session, child.id, provider)
     assert len(plans) == 1
     assert plans[0].plan_name == "Abu Dhabi Toddler Preventive Care Plan"
+
+
+def test_recommendation_rule_validation_rejects_duplicates_and_unapproved():
+    # Verify that all loaded rules are APPROVED and have unique IDs
+    rules = RecommendationService.load_rules()
+    assert len(rules) > 0
+    rule_ids = [r["rule_id"] for r in rules]
+    assert len(rule_ids) == len(set(rule_ids)), "Duplicate rule IDs detected across rule registries!"
+    for r in rules:
+        assert r.get("approval_status") == "APPROVED", f"Unapproved rule {r.get('rule_id')} was loaded!"
+        assert r.get("effective_date") is not None, f"Rule {r.get('rule_id')} missing effective_date"

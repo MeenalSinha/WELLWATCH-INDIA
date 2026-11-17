@@ -5,6 +5,8 @@
     {
       "rule_id": "REC-PED-001",
       "rule_version": "1.0.0",
+      "approval_status": "APPROVED",
+      "effective_date": "2024-01-01",
       "category": "WELL_CHILD_VISIT",
       "pathway_id": "pediatric_well_child",
       "applicable_population": "pediatric",
@@ -21,6 +23,8 @@
     {
       "rule_id": "REC-PED-002",
       "rule_version": "1.0.0",
+      "approval_status": "APPROVED",
+      "effective_date": "2024-01-01",
       "category": "DEVELOPMENTAL_SCREENING",
       "pathway_id": "pediatric_well_child",
       "applicable_population": "pediatric",

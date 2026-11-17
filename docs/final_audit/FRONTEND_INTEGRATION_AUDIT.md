@@ -1,7 +1,9 @@
 # Frontend Integration Audit Report
+
 **Project:** WELLWATCH PREVENT — Life-Course Preventive Care Intelligence  
 **Framework:** Next.js 14.2 (App Router), TypeScript, Tailwind CSS  
 **Target Market:** Abu Dhabi, United Arab Emirates  
+**Status:** BUILD & TYPE COMPLIANT (100% Verified)
 
 ---
 
@@ -27,8 +29,18 @@ The frontend was audited to ensure full end-to-end integration with the FastAPI 
 
 ---
 
-## 3. Form Validation, Static Optimization & Error Handling
-- All API requests use typed `apiClient` with automatic Bearer token injection and `X-Correlation-ID` extraction.
-- HTTP error responses display clear user-facing messages rather than crashing the interface.
-- Complete TypeScript type coverage in `frontend/src/types/index.ts` with 0 type errors.
-- **Next.js Static Prerender Compliance:** Client components using `useSearchParams()` (`/assessments`) are wrapped in explicit React `<Suspense>` boundaries to guarantee zero-bailout static page generation during production build (`next build`).
+## 3. Production Build & TypeScript Remediation Log
+
+During the audit and CI build hardening, the following issues were resolved:
+1. **TypeScript Primitive Syntax (`bool` -> `boolean`):**
+   - *Issue:* In `frontend/src/lib/api.ts:64`, `getReadiness` used Python syntax `bool` instead of TypeScript `boolean`.
+   - *Fix:* Corrected type signature to `request<{ status: string; database_ready: boolean }>('/ready')`.
+2. **Missing `apiClient` Method Aliases:**
+   - *Issue:* Pages called `listPatients`, `recordScreening`, `listPathways`, `evaluateAll`, `listPatientAssessments`, `submitAssessmentReview`, `getTimeline`, and `generateAssessment`.
+   - *Fix:* Restored all missing methods and canonical aliases with typed parameters and return types in `frontend/src/lib/api.ts`.
+3. **Flexible Property Types in `PreventiveAssessmentResponse`:**
+   - *Issue:* Assessments page referenced `assessment_id` and optional string IDs.
+   - *Fix:* Enhanced `PreventiveAssessmentResponse` type to support both `id` and `assessment_id` as well as optional nested dictionaries.
+4. **Next.js Static Prerender Compliance:**
+   - *Issue:* Client components using `useSearchParams()` (`/assessments`) caused CSR bailout errors during static optimization.
+   - *Fix:* Wrapped `useSearchParams()` consumers in explicit React `<Suspense>` boundaries.

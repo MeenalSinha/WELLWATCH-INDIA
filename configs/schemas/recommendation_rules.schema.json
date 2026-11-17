@@ -27,6 +27,8 @@
           "rule_version": { "type": "string" },
           "category": { "type": "string" },
           "pathway_id": { "type": "string" },
+          "approval_status": { "type": "string", "enum": ["APPROVED", "DRAFT", "UNDER_REVIEW", "RETIRED"] },
+          "effective_date": { "type": "string" },
           "applicable_population": { "type": "string" },
           "trigger_condition": {
             "type": "object",
@@ -34,6 +36,7 @@
               "care_gap_code": { "type": "string" },
               "clinical_risk_tier": { "type": "string" },
               "epistemic_status": { "type": "string" },
+              "gene_symbol": { "type": "string" },
               "age_min": { "type": "number" },
               "age_max": { "type": "number" }
             }

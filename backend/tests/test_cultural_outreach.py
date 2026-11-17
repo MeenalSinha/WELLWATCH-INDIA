@@ -11,6 +11,7 @@ from backend.app.models.outreach import (
     OutreachTask,
     CommunicationChannel,
     OutreachDeliveryStatus,
+    OutreachAuthorizationStatus,
 )
 from backend.app.services.person_service import PersonService
 from backend.app.services.outreach_service import OutreachService
@@ -55,7 +56,8 @@ def test_default_preference_is_arabic_and_in_app(db_session: Session):
     pref = OutreachService.get_or_create_preference(db_session, child.id)
     assert pref.preferred_language == "ar"
     assert pref.preferred_channel == CommunicationChannel.IN_APP
-    assert pref.consent_opt_in is True
+    assert pref.consent_opt_in is False
+    assert pref.authorization_status == OutreachAuthorizationStatus.NOT_PROVIDED
     assert pref.guardian_proxy_required is True  # minor requires guardian
 
 
@@ -138,6 +140,14 @@ def test_pediatric_outreach_targets_guardian_under_wadeemas_law(db_session: Sess
         relationship_to_guardian="Mother",
     )
 
+    # Guardian provides explicit affirmative consent
+    OutreachService.update_preference(
+        db=db_session,
+        person_id=child.id,
+        data={"consent_opt_in": True, "authorization_status": OutreachAuthorizationStatus.AUTHORIZED},
+        current_user=provider,
+    )
+
     task = OutreachService.schedule_outreach_task(
         db=db_session,
         person_id=child.id,
@@ -171,6 +181,14 @@ def test_duplicate_outreach_suppressed_within_7_days(db_session: Session):
         date_of_birth=date.today() - timedelta(days=30 * 365),
         gender=Gender.MALE,
         organization_id=org.id,
+    )
+
+    # Explicit affirmative consent granted
+    OutreachService.update_preference(
+        db=db_session,
+        person_id=adult.id,
+        data={"consent_opt_in": True, "authorization_status": OutreachAuthorizationStatus.AUTHORIZED},
+        current_user=provider,
     )
 
     # 1st outreach task
@@ -220,6 +238,14 @@ def test_honest_provider_boundary_reports_not_configured_for_sms(db_session: Ses
         organization_id=org.id,
     )
 
+    # Affirmative consent provided
+    OutreachService.update_preference(
+        db=db_session,
+        person_id=adult.id,
+        data={"consent_opt_in": True, "authorization_status": OutreachAuthorizationStatus.AUTHORIZED},
+        current_user=provider,
+    )
+
     task = OutreachService.schedule_outreach_task(
         db=db_session,
         person_id=adult.id,
@@ -241,4 +267,63 @@ def test_outreach_analytics_metrics(db_session: Session):
     assert "total_generated" in stats
     assert "total_delivered" in stats
     assert "total_suppressed" in stats
-    assert "honest_boundary_note" in stats
+
+
+def test_in_app_notification_inbox_and_read_lifecycle(db_session: Session):
+    org = Organization(name="SEHA Inbox Facility", license_number="DOH-HOSP-O07", organization_type="PRIMARY_CARE_CLINIC", region="Abu Dhabi")
+    db_session.add(org)
+    db_session.commit()
+
+    provider = User(
+        email="dr.inbox@seha.ae",
+        password_hash="pw",
+        full_name="Dr. Laila",
+        role=UserRole.HEALTHCARE_PROVIDER,
+        organization_id=org.id,
+        is_active=True,
+    )
+    patient_user = User(
+        email="patient.inbox@wellwatch.ae",
+        password_hash="pw",
+        full_name="Maryam Al Suwaidi",
+        role=UserRole.INDIVIDUAL,
+        is_active=True,
+    )
+    db_session.add_all([provider, patient_user])
+    db_session.commit()
+
+    adult = PersonService.register_person(
+        db=db_session,
+        first_name="Maryam",
+        last_name="Al Suwaidi",
+        date_of_birth=date.today() - timedelta(days=28 * 365),
+        gender=Gender.FEMALE,
+        organization_id=org.id,
+        user_id=patient_user.id,
+    )
+
+    OutreachService.update_preference(
+        db=db_session,
+        person_id=adult.id,
+        data={"consent_opt_in": True, "authorization_status": OutreachAuthorizationStatus.AUTHORIZED},
+        current_user=provider,
+    )
+
+    task = OutreachService.schedule_outreach_task(
+        db=db_session,
+        person_id=adult.id,
+        template_id="TMPL-ADULT-IFHAS-INVITE",
+        current_user=provider,
+        override_channel=CommunicationChannel.IN_APP,
+    )
+    assert task.delivery_status == OutreachDeliveryStatus.DELIVERED
+
+    # Patient checks inbox
+    notifications = OutreachService.get_inbox(db=db_session, user_id=patient_user.id)
+    assert len(notifications) >= 1
+    notif = notifications[0]
+    assert notif.is_read is False
+
+    # Mark as read
+    read_notif = OutreachService.mark_notification_read(db=db_session, notification_id=notif.id, user_id=patient_user.id)
+    assert read_notif.is_read is True

@@ -71,3 +71,59 @@ Five end-to-end clinical and operational integration workflows were authored and
   4. Executed `ControlledInferenceService` on valid profile: verified calibrated risk probability and directional feature attributions.
   5. Executed inference on incomplete profile (missing 75% of features): verified service safely abstained with `ABSTAINED_INSUFFICIENT_DATA`.
 - **Result:** **PASSED** (Execution time: 1.00s).
+
+---
+
+## 3. Phases 9–11 Integrated Workflows (`test_phases_9_to_11_integrated.py`)
+**Execution Date:** 2026-11-18  
+**Status:** **ALL 5 INTEGRATED WORKFLOWS PASSED (5/5)**
+
+### Integrated Workflow 1: Pediatric Prevention
+- **Objective:** End-to-end execution of Phases 9, 10, and 11 for pediatric population under UAE Wadeema's Law.
+- **Test Sequence:**
+  1. Facility and provider registered at Danat Al Emarat Pediatric Hospital.
+  2. Registered 12-month child (`Sultan Al Mansoori`) linked to legal guardian (`Shaikha Al Mansoori`).
+  3. Phase 9: Recommendation Engine evaluates Well-Child pathway and generates `GAP-WELL-CHILD-DUE` recommendation.
+  4. Clinical provider attests and approves recommendation with rationale.
+  5. Assembled structured Preventive Care Plan.
+  6. Phase 10: Verified guardian consent, scheduled culturally competent Arabic outreach targeting guardian proxy under Wadeema's Law.
+  7. Phase 11: Appointment scheduled and attendance recorded as `ATTENDED`.
+  8. Care gap verified and closed with persisted clinical encounter evidence, transitioning recommendation to `COMPLETED`.
+- **Result:** **PASSED**.
+
+### Integrated Workflow 2: Adult Preventive Screening (ADPHC IFHAS)
+- **Objective:** Comprehensive periodic health exam for 50-year-old adult.
+- **Test Sequence:**
+  1. Enrolled adult resident (`Abdullah Al Hashimi`) at Cleveland Clinic Abu Dhabi.
+  2. Generated IFHAS recommendation and assembled multi-disciplinary care plan.
+  3. Dispatched Arabic In-App notification with verified affirmative consent.
+  4. Scheduled screening exam and marked attendance.
+  5. Verified care-gap closure against database clinical encounter record.
+- **Result:** **PASSED**.
+
+### Integrated Workflow 3: Autonomous Choice & Declined Recommendation
+- **Objective:** Patient exercises autonomous choice to decline; non-harassment enforced.
+- **Test Sequence:**
+  1. Enrolled adult resident (`Rashid Al Mazrouei`).
+  2. Generated recommendation and offered to patient.
+  3. Patient declined with documented voluntary justification ("Completed physical abroad in London").
+  4. Subsequent recommendation engine runs respect the declined status and suppress duplicate recommendation generation.
+- **Result:** **PASSED**.
+
+### Integrated Workflow 4: Failed Outreach & Honest Boundary
+- **Objective:** True gateway failure handling and retry policy compliance.
+- **Test Sequence:**
+  1. Enrolled adult resident (`Faris Al Zaabi`).
+  2. Dispatched via unconfigured SMS gateway -> honest boundary returned `FAILED` with `NOT_CONFIGURED` without mock success.
+  3. Attempted retry via `retry_task`: retry count incremented to 1; honest failure status preserved.
+- **Result:** **PASSED**.
+
+### Integrated Workflow 5: Referral Incomplete -> Follow-up -> Evidence Closure
+- **Objective:** Specialist referral rejection triggers automated follow-up; care coordinator reroutes and closes gap with verified referral outcome.
+- **Test Sequence:**
+  1. Provider issued specialist referral to Preventive Cardiology for `Saeed Al Nuaimi`.
+  2. Receiving facility reported referral `REJECTED` due to capacity.
+  3. Automated `FollowUpTask` created for Care Coordinator with 2-day deadline (`INCOMPLETE_REFERRAL`).
+  4. Care coordinator rescheduled at Sheikh Shakhbout Medical City (SSMC) and resolved task.
+  5. Final consultation completed; care gap closed against verified `Referral` record with status `COMPLETED`.
+- **Result:** **PASSED**.

@@ -10,7 +10,10 @@ from backend.app.models.navigation import (
     AppointmentStatus,
     ReferralStatus,
     FollowUpStatus,
+    RecallTask,
+    RecallStatus,
 )
+from backend.app.models.clinical import Encounter, EncounterType, EncounterStatus
 from backend.app.models.recommendation import (
     PreventiveRecommendation,
     RecommendationCategory,
@@ -259,13 +262,26 @@ def test_verified_care_gap_closure_completes_recommendation(db_session: Session)
     db_session.commit()
     db_session.refresh(rec)
 
+    # Persist actual clinical encounter evidence
+    encounter = Encounter(
+        patient_id=adult.id,
+        facility_id=org.id,
+        provider_user_id=provider.id,
+        encounter_type=EncounterType.OUTPATIENT_PREVENTIVE,
+        status=EncounterStatus.COMPLETED,
+        clinical_notes="Completed IFHAS screening encounter with vitals and labs",
+    )
+    db_session.add(encounter)
+    db_session.commit()
+    db_session.refresh(encounter)
+
     # Verify and close care gap with verified clinical screening encounter evidence
     evidence = NavigationService.verify_and_close_care_gap(
         db=db_session,
         person_id=adult.id,
         care_gap_id="GAP-IFHAS-COMPREHENSIVE",
-        evidence_source="SCREENING_RECORD",
-        evidence_id="enc_scr_closure_7788",
+        evidence_source="ENCOUNTER",
+        evidence_id=encounter.id,
         verification_method="CLINICIAN_ATTESTATION",
         current_user=provider,
         recommendation_id=rec.id,
@@ -279,3 +295,149 @@ def test_verified_care_gap_closure_completes_recommendation(db_session: Session)
     db_session.refresh(rec)
     assert rec.lifecycle_status == RecommendationLifecycleStatus.COMPLETED
     assert "Care gap closed via evidence" in rec.reviewer_notes
+
+
+def test_system_admin_rejected_from_closing_care_gap(db_session: Session):
+    org = Organization(name="Admin Reject Clinic", license_number="DOH-HOSP-N06", organization_type="HOSPITAL", region="Abu Dhabi")
+    db_session.add(org)
+    db_session.commit()
+
+    admin = User(
+        email="sysadmin.nav@doh.gov.ae",
+        password_hash="pw",
+        full_name="Admin Saeed",
+        role=UserRole.SYSTEM_ADMIN,
+        organization_id=org.id,
+        is_active=True,
+    )
+    db_session.add(admin)
+    db_session.commit()
+
+    patient = PersonService.register_person(
+        db=db_session,
+        first_name="Fatima",
+        last_name="Al Mansoori",
+        date_of_birth=date.today() - timedelta(days=35 * 365),
+        gender=Gender.FEMALE,
+        organization_id=org.id,
+    )
+
+    with pytest.raises(HTTPException) as excinfo:
+        NavigationService.verify_and_close_care_gap(
+            db=db_session,
+            person_id=patient.id,
+            care_gap_id="GAP-MAMMO-001",
+            evidence_source="ENCOUNTER",
+            evidence_id="fake_enc",
+            verification_method="CLINICIAN_ATTESTATION",
+            current_user=admin,
+        )
+    assert excinfo.value.status_code == 403
+    assert "Only licensed healthcare providers may attest" in excinfo.value.detail
+
+
+def test_cross_patient_evidence_rejected(db_session: Session):
+    org = Organization(name="Cross Patient Clinic", license_number="DOH-HOSP-N07", organization_type="HOSPITAL", region="Abu Dhabi")
+    db_session.add(org)
+    db_session.commit()
+
+    provider = User(
+        email="dr.crosspatient@seha.ae",
+        password_hash="pw",
+        full_name="Dr. Noura",
+        role=UserRole.HEALTHCARE_PROVIDER,
+        organization_id=org.id,
+        is_active=True,
+    )
+    db_session.add(provider)
+    db_session.commit()
+
+    patient_a = PersonService.register_person(
+        db=db_session,
+        first_name="Patient",
+        last_name="A",
+        date_of_birth=date.today() - timedelta(days=30 * 365),
+        gender=Gender.FEMALE,
+        organization_id=org.id,
+    )
+    patient_b = PersonService.register_person(
+        db=db_session,
+        first_name="Patient",
+        last_name="B",
+        date_of_birth=date.today() - timedelta(days=32 * 365),
+        gender=Gender.MALE,
+        organization_id=org.id,
+    )
+
+    # Encounter belongs to Patient B
+    enc_b = Encounter(
+        patient_id=patient_b.id,
+        facility_id=org.id,
+        provider_user_id=provider.id,
+        encounter_type=EncounterType.OUTPATIENT_PREVENTIVE,
+        status=EncounterStatus.COMPLETED,
+    )
+    db_session.add(enc_b)
+    db_session.commit()
+
+    # Attempt to close Patient A's gap with Patient B's encounter
+    with pytest.raises(HTTPException) as excinfo:
+        NavigationService.verify_and_close_care_gap(
+            db=db_session,
+            person_id=patient_a.id,
+            care_gap_id="GAP-A",
+            evidence_source="ENCOUNTER",
+            evidence_id=enc_b.id,
+            verification_method="CLINICIAN_ATTESTATION",
+            current_user=provider,
+        )
+    assert excinfo.value.status_code == 400
+    assert "belongs to a different patient" in excinfo.value.detail
+
+
+def test_recall_task_lifecycle(db_session: Session):
+    org = Organization(name="Recall Clinic", license_number="DOH-HOSP-N08", organization_type="HOSPITAL", region="Abu Dhabi")
+    db_session.add(org)
+    db_session.commit()
+
+    provider = User(
+        email="dr.recall@danatalemarat.ae",
+        password_hash="pw",
+        full_name="Dr. Shamma",
+        role=UserRole.HEALTHCARE_PROVIDER,
+        organization_id=org.id,
+        is_active=True,
+    )
+    db_session.add(provider)
+    db_session.commit()
+
+    child = PersonService.register_person(
+        db=db_session,
+        first_name="Zayed",
+        last_name="Al Dhaheri",
+        date_of_birth=date.today() - timedelta(days=180),
+        gender=Gender.MALE,
+        organization_id=org.id,
+    )
+
+    recall = NavigationService.create_recall_task(
+        db=db_session,
+        person_id=child.id,
+        pathway_id="adphc_well_child",
+        screening_type="IMMUNIZATION_DUE",
+        due_date=datetime.now(timezone.utc) + timedelta(days=14),
+        current_user=provider,
+    )
+    assert recall.status == RecallStatus.SCHEDULED
+    assert recall.screening_type == "IMMUNIZATION_DUE"
+
+    recalls = NavigationService.get_recalls(db=db_session, person_id=child.id)
+    assert len(recalls) >= 1
+
+    updated = NavigationService.update_recall_status(
+        db=db_session,
+        recall_id=recall.id,
+        new_status=RecallStatus.COMPLETED,
+        current_user=provider,
+    )
+    assert updated.status == RecallStatus.COMPLETED

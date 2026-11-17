@@ -3,6 +3,7 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict
 from backend.app.models.outreach import (
     CommunicationChannel,
+    OutreachAuthorizationStatus,
     OutreachDeliveryStatus,
 )
 
@@ -14,7 +15,8 @@ class CommunicationPreferenceBase(BaseModel):
     contact_window_end: str = "19:00"
     quiet_hours_start: str = "21:00"
     quiet_hours_end: str = "08:00"
-    consent_opt_in: bool = True
+    consent_opt_in: bool = False
+    authorization_status: OutreachAuthorizationStatus = OutreachAuthorizationStatus.NOT_PROVIDED
     guardian_proxy_required: bool = False
     accessibility_needs: Optional[Dict[str, Any]] = None
 
@@ -110,3 +112,18 @@ class TemplatePreviewResponse(BaseModel):
     rendered_subject: str
     rendered_body: str
     governance_approved: bool
+
+
+class InAppNotificationResponse(BaseModel):
+    id: str
+    organization_id: str
+    person_id: str
+    recipient_user_id: Optional[str] = None
+    outreach_task_id: Optional[str] = None
+    title: str
+    message_body: str
+    is_read: bool
+    read_at: Optional[datetime] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
