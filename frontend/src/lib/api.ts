@@ -99,6 +99,11 @@ export const apiClient = {
   getHealth: () => request<HealthStatus>('/health'),
   getReadiness: () => request<{ status: string; database_ready: boolean }>('/ready'),
   listScreenings: (organizationId?: string) => request<ScreeningEncounter[]>('/screenings'),
+  recordScreening: (data: Partial<ScreeningEncounter>) =>
+    request<ScreeningEncounter>('/screenings', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   // Auth
   login: (email: string, password: string) =>
@@ -108,10 +113,19 @@ export const apiClient = {
     }),
   getMe: () => request<User>('/auth/me'),
 
-  // Patients (Phase 5)
+  // Patients (Phases 4 & 5)
+  listPatients: (classification?: string, q?: string, skip = 0, limit = 50) => {
+    const params = new URLSearchParams();
+    if (classification) params.set('classification', classification);
+    if (q) params.set('q', q);
+    params.set('skip', String(skip));
+    params.set('limit', String(limit));
+    return request<PersonListResponse>(`/patients?${params.toString()}`);
+  },
   getPatients: (page = 1, pageSize = 20, search?: string) => {
-    const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
-    if (search) params.set('search', search);
+    const skip = (page - 1) * pageSize;
+    const params = new URLSearchParams({ skip: String(skip), limit: String(pageSize) });
+    if (search) params.set('q', search);
     return request<PersonListResponse>(`/patients?${params.toString()}`);
   },
   getPatient: (id: string) => request<PersonSummary>(`/patients/${id}`),
@@ -123,6 +137,7 @@ export const apiClient = {
   getPediatricProfile: (id: string) => request<PediatricProfile>(`/patients/${id}/pediatric-profile`),
   getAdultProfile: (id: string) => request<AdultProfile>(`/patients/${id}/adult-profile`),
   getPatientTimeline: (id: string) => request<TimelineResponse>(`/patients/${id}/timeline`),
+  getTimeline: (id: string) => request<TimelineResponse>(`/patients/${id}/timeline`),
   recordObservation: (patientId: string, data: ObservationCreate) =>
     request<any>(`/patients/${patientId}/observations`, {
       method: 'POST',
@@ -131,11 +146,16 @@ export const apiClient = {
 
   // Pathways (Phase 6)
   getPathways: () => request<PathwaySummary[]>('/pathways'),
+  listPathways: () => request<PathwaySummary[]>('/pathways'),
   getPathway: (id: string) => request<any>(`/pathways/${id}`),
   evaluatePathway: (id: string, payload: any) =>
     request<any>(`/pathways/${id}/evaluate`, {
       method: 'POST',
       body: JSON.stringify(payload),
+    }),
+  evaluateAll: (pathwayId: string, patientId: string) =>
+    request<any>(`/pathways/${pathwayId}/evaluate-all/${patientId}`, {
+      method: 'POST',
     }),
   evaluateComprehensive: (patientId: string) =>
     request<ComprehensiveEvaluation>(`/pathways/evaluate-patient/${patientId}`),
@@ -148,14 +168,28 @@ export const apiClient = {
     if (patientId) params.set('patient_id', patientId);
     return request<PreventiveAssessmentResponse[]>(`/assessments?${params.toString()}`);
   },
+  listPatientAssessments: (patientId: string) =>
+    request<PreventiveAssessmentResponse[]>(`/assessments/patient/${patientId}`),
   getAssessment: (assessmentId: string) =>
     request<PreventiveAssessmentResponse>(`/assessments/${assessmentId}`),
-  generateAssessment: (patientId: string, pathwayId: string, pathwayVersion: string) =>
-    request<PreventiveAssessmentResponse>('/assessments/generate', {
+  generateAssessment: (patientId: string, pathwayId?: string, pathwayVersion?: string) => {
+    const params = new URLSearchParams();
+    if (pathwayId) params.set('pathway_id', pathwayId);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request<PreventiveAssessmentResponse>(`/assessments/generate/${patientId}${qs}`, {
       method: 'POST',
-      body: JSON.stringify({ patient_id: patientId, pathway_id: pathwayId, pathway_version: pathwayVersion }),
-    }),
+      body: JSON.stringify({ pathway_version: pathwayVersion }),
+    });
+  },
   reviewAssessment: (assessmentId: string, reviewStatus: string, notes: string) =>
+    request<{ success: boolean; assessment_id: string; human_review_status: string; reviewed_at: string }>(
+      `/assessments/${assessmentId}/review`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ review_status: reviewStatus, notes }),
+      }
+    ),
+  submitAssessmentReview: (assessmentId: string, reviewStatus: string, notes: string) =>
     request<{ success: boolean; assessment_id: string; human_review_status: string; reviewed_at: string }>(
       `/assessments/${assessmentId}/review`,
       {
