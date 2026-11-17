@@ -44,8 +44,11 @@ function AssessmentsContent() {
           const patientAssessments = await apiClient.listPatientAssessments(patientList.items[0].id);
           setAssessments(patientAssessments);
           if (patientAssessments.length > 0) {
-            const firstDetail = await apiClient.getAssessment(patientAssessments[0].assessment_id || patientAssessments[0].id!);
-            setSelectedAssessment(firstDetail);
+            const aId = patientAssessments[0].assessment_id || patientAssessments[0].id || '';
+            if (aId) {
+              const firstDetail = await apiClient.getAssessment(aId);
+              setSelectedAssessment(firstDetail);
+            }
           }
         }
       } catch (err: any) {
@@ -65,8 +68,13 @@ function AssessmentsContent() {
       const patientAssessments = await apiClient.listPatientAssessments(patientId);
       setAssessments(patientAssessments);
       if (patientAssessments.length > 0) {
-        const detail = await apiClient.getAssessment(patientAssessments[0].assessment_id || patientAssessments[0].id!);
-        setSelectedAssessment(detail);
+        const aId = patientAssessments[0].assessment_id || patientAssessments[0].id || '';
+        if (aId) {
+          const detail = await apiClient.getAssessment(aId);
+          setSelectedAssessment(detail);
+        } else {
+          setSelectedAssessment(null);
+        }
       } else {
         setSelectedAssessment(null);
       }
@@ -163,8 +171,8 @@ function AssessmentsContent() {
             <p className="text-xs text-slate-500 py-4">No assessments generated for this patient yet.</p>
           ) : (
             <div className="space-y-2">
-              {assessments.map((a) => {
-                const aId = a.assessment_id || a.id!;
+              {assessments.map((a, idx) => {
+                const aId = a.assessment_id || a.id || `assessment-${idx}`;
                 const isSelected = selectedAssessment && (selectedAssessment.assessment_id === aId || selectedAssessment.id === aId);
                 return (
                   <div

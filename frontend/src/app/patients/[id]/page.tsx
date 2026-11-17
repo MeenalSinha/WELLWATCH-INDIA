@@ -426,37 +426,40 @@ export default function PatientDetailPage() {
           </h3>
           {assessments.length > 0 ? (
             <div className="space-y-4">
-              {assessments.map((a) => (
-                <div key={a.assessment_id || a.id} className="p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-800">Pathway: {a.pathway_id} ({a.pathway_version})</span>
-                      <span className="text-[10px] font-mono text-slate-400">{a.created_at}</span>
+              {assessments.map((a, idx) => {
+                const aId = a.assessment_id || a.id || `assess-${idx}`;
+                return (
+                  <div key={aId} className="p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-800">Pathway: {a.pathway_id} ({a.pathway_version})</span>
+                        <span className="text-[10px] font-mono text-slate-400">{a.created_at}</span>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                        a.clinical_risk_tier === 'ELEVATED_RISK'
+                          ? 'bg-rose-100 text-rose-800'
+                          : a.clinical_risk_tier === 'MODERATE_RISK'
+                          ? 'bg-amber-100 text-amber-800'
+                          : a.clinical_risk_tier === 'INSUFFICIENT_DATA'
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-emerald-100 text-emerald-800'
+                      }`}>
+                        {a.clinical_risk_tier}
+                      </span>
                     </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                      a.clinical_risk_tier === 'ELEVATED_RISK'
-                        ? 'bg-rose-100 text-rose-800'
-                        : a.clinical_risk_tier === 'MODERATE_RISK'
-                        ? 'bg-amber-100 text-amber-800'
-                        : a.clinical_risk_tier === 'INSUFFICIENT_DATA'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-emerald-100 text-emerald-800'
-                    }`}>
-                      {a.clinical_risk_tier}
-                    </span>
+                    <p className="text-xs text-slate-700"><strong>Action:</strong> {a.recommended_action}</p>
+                    <div className="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-100">
+                      <span>Human Review: <strong className="text-slate-800">{a.human_review_status}</strong></span>
+                      <Link
+                        href={`/assessments?id=${aId}`}
+                        className="text-emerald-700 font-semibold hover:underline"
+                      >
+                        View Full Explainability & Review &rarr;
+                      </Link>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-700"><strong>Action:</strong> {a.recommended_action}</p>
-                  <div className="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-100">
-                    <span>Human Review: <strong className="text-slate-800">{a.human_review_status}</strong></span>
-                    <Link
-                      href={`/assessments?id=${a.assessment_id || a.id}`}
-                      className="text-emerald-700 font-semibold hover:underline"
-                    >
-                      View Full Explainability & Review &rarr;
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-xs text-slate-500">No preventive risk assessments generated yet. Click "Run Preventive Assessment" above.</p>
