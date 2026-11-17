@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wellwatch-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: wellwatch_prevent
+      POSTGRES_USER: wellwatch_user
+      POSTGRES_PASSWORD: wellwatch_secure_password_dev_only
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wellwatch_user -d wellwatch_prevent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.backend
+    container_name: wellwatch-backend
+    restart: always
+    environment:
+      ENVIRONMENT: production
+      PROJECT_NAME: "WELLWATCH PREVENT"
+      SECRET_KEY: "wellwatch-prevent-production-secure-key-32chars-min"
+      DATABASE_URL: "postgresql://wellwatch_user:wellwatch_secure_password_dev_only@postgres:5432/wellwatch_prevent"
+      BACKEND_CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000"]'
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.frontend
+    container_name: wellwatch-frontend
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:8000/api/v1"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+    driver: local

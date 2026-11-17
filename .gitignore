@@ -205,3 +205,24 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Local Environment & Secrets
+.env
+.env.local
+.env.*.local
+
+# Local SQLite databases (except legacy)
+data/wellwatch_prevent.db*
+data/test_*.db*
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+*.sqlite
+*.sqlite3
+
+# Node.js
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
