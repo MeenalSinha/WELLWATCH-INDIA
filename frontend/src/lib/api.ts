@@ -61,7 +61,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 export const apiClient = {
   // Health
   getHealth: () => request<HealthStatus>('/health'),
-  getReadiness: () => request<{ status: string; database_ready: bool }>('/ready'),
+  getReadiness: () => request<{ status: string; database_ready: boolean }>('/ready'),
 
   // Auth
   login: (email: string, password: string) =>
