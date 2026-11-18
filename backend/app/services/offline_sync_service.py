@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, and_, desc
 from fastapi import HTTPException, status
 
 from backend.app.models.user import User, UserRole

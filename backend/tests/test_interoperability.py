@@ -51,7 +51,7 @@ def test_fhir_patient_serialization(db_session: Session):
 
     ident = PersonIdentifier(
         person_id=patient.id,
-        identifier_namespace=IdentifierNamespace.EMIRATES_ID,
+        namespace=IdentifierNamespace.EMIRATES_ID,
         identifier_value="784-1988-1234567-1",
     )
     fhir_pat = FhirSerializer.serialize_patient(patient, [ident])
@@ -134,7 +134,7 @@ def test_fhir_bundle_ingestion_with_identity_and_provenance(db_session: Session)
     eid_val = "784-1985-7654321-1"
     ident = PersonIdentifier(
         person_id=patient.id,
-        identifier_namespace=IdentifierNamespace.EMIRATES_ID,
+        namespace=IdentifierNamespace.EMIRATES_ID,
         identifier_value=eid_val,
     )
     db_session.add(ident)

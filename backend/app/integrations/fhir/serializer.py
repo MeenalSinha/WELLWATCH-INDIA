@@ -38,10 +38,12 @@ class FhirSerializer:
         birth_date = person.date_of_birth.strftime("%Y-%m-%d") if person.date_of_birth else None
 
         telecom = []
-        if person.phone_number:
-            telecom.append({"system": "phone", "value": person.phone_number, "use": "mobile"})
-        if person.email:
-            telecom.append({"system": "email", "value": person.email, "use": "home"})
+        phone = getattr(person, "phone_number", None)
+        if phone:
+            telecom.append({"system": "phone", "value": phone, "use": "mobile"})
+        email = getattr(person, "email", None)
+        if email:
+            telecom.append({"system": "email", "value": email, "use": "home"})
 
         return {
             "resourceType": "Patient",

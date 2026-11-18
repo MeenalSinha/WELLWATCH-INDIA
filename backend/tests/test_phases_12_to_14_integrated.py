@@ -8,7 +8,12 @@ from backend.app.models.user import User, UserRole
 from backend.app.models.person import Person, PersonIdentifier, IdentifierNamespace, Gender
 from backend.app.models.clinical import ScreeningRecord, ScreeningStatus
 from backend.app.models.screening import EpistemicStatus
-from backend.app.models.recommendation import PreventiveRecommendation, RecommendationLifecycleStatus
+from backend.app.models.recommendation import (
+    PreventiveRecommendation,
+    RecommendationLifecycleStatus,
+    RecommendationCategory,
+    RecommendationPriority,
+)
 from backend.app.models.navigation import Appointment, CareGapClosureEvidence, AppointmentStatus
 from backend.app.models.offline import SyncConflict, ConflictResolutionStatus
 from backend.app.models.integration import ProvenanceRecord
@@ -81,13 +86,15 @@ def test_cross_phase_workflow_a_population_intelligence(db_session: Session):
     rec = PreventiveRecommendation(
         organization_id=org.id,
         person_id=patient.id,
+        pathway_id="ADPHC_CARDIOVASCULAR",
+        category=RecommendationCategory.ADULT_COMPREHENSIVE_SCREENING,
+        priority=RecommendationPriority.HIGH,
+        lifecycle_status=RecommendationLifecycleStatus.APPROVED,
+        recommended_action="ADPHC IFHAS Screening",
+        clinical_rationale="Adult preventive baseline overdue",
+        source_guideline="ADPHC Standard 2026",
         rule_id="RULE-ADULT-IFHAS-001",
         rule_version="1.0.0",
-        recommendation_category="SCREENING",
-        title="ADPHC IFHAS Screening",
-        clinical_justification="Adult preventive baseline overdue",
-        priority="HIGH",
-        lifecycle_status=RecommendationLifecycleStatus.APPROVED,
     )
     db_session.add(rec)
     db_session.commit()
@@ -96,8 +103,8 @@ def test_cross_phase_workflow_a_population_intelligence(db_session: Session):
         organization_id=org.id,
         person_id=patient.id,
         recommendation_id=rec.id,
-        scheduled_start=datetime.utcnow() - timedelta(days=2),
-        scheduled_end=datetime.utcnow() - timedelta(days=2) + timedelta(minutes=30),
+        service_type="IFHAS_SCREENING",
+        scheduled_time=datetime.utcnow() - timedelta(days=2),
         status=AppointmentStatus.ATTENDED,
     )
     db_session.add(appt)
@@ -106,12 +113,14 @@ def test_cross_phase_workflow_a_population_intelligence(db_session: Session):
     # 3. Add care gap closure evidence
     evidence = CareGapClosureEvidence(
         organization_id=org.id,
-        recommendation_id=rec.id,
         person_id=patient.id,
-        closure_method="ENCOUNTER_COMPLETION",
-        evidence_reference_type="ENCOUNTER",
-        evidence_reference_id="ENC-SAMPLE-001",
-        recorded_at=datetime.utcnow(),
+        care_gap_id="GAP-ADULT-IFHAS-001",
+        recommendation_id=rec.id,
+        evidence_source="ENCOUNTER",
+        evidence_id="ENC-SAMPLE-001",
+        verification_method="CLINICIAN_ATTESTATION",
+        verifying_user_id=doctor.id,
+        is_valid=True,
     )
     db_session.add(evidence)
     db_session.commit()
@@ -177,7 +186,7 @@ def test_cross_phase_workflow_c_external_laboratory_ingestion(db_session: Sessio
     eid_val = "784-1992-9988776-1"
     ident = PersonIdentifier(
         person_id=patient.id,
-        identifier_namespace=IdentifierNamespace.EMIRATES_ID,
+        namespace=IdentifierNamespace.EMIRATES_ID,
         identifier_value=eid_val,
     )
     db_session.add(ident)
@@ -238,7 +247,7 @@ def test_cross_phase_workflow_d_external_care_completion(db_session: Session):
     eid_val = "784-1995-1122334-1"
     ident = PersonIdentifier(
         person_id=patient.id,
-        identifier_namespace=IdentifierNamespace.EMIRATES_ID,
+        namespace=IdentifierNamespace.EMIRATES_ID,
         identifier_value=eid_val,
     )
     db_session.add(ident)
