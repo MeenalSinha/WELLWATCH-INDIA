@@ -616,3 +616,237 @@ export interface NavigationAnalyticsResponse {
   closed_care_gaps_count: number;
   data_source_note: string;
 }
+
+// ==========================================
+// PHASE 12: POPULATION HEALTH INTELLIGENCE
+// ==========================================
+
+export interface PopulationOverviewResponse {
+  total_registered: number;
+  pediatric_population: number;
+  adult_population: number;
+  geriatric_population: number;
+  incomplete_profiles: number;
+  eligible_population: number;
+  completed_screenings: number;
+  screening_coverage_percentage: number;
+  confirmed_overdue: number;
+  potentially_overdue: number;
+  recommendations_generated: number;
+  recommendations_approved: number;
+  recommendations_accepted: number;
+  recommendations_declined: number;
+  recommendations_completed: number;
+  appointments_booked: number;
+  appointments_attended: number;
+  no_show_rate: number;
+  referrals_created: number;
+  referrals_completed: number;
+  care_gaps_closed: number;
+  reporting_window_days: number;
+  generated_at: string;
+}
+
+export interface PediatricPopulationResponse {
+  total_pediatric: number;
+  eligible_for_well_child: number;
+  completed_well_child: number;
+  well_child_coverage_percentage: number;
+  overdue_well_child: number;
+  developmental_stages: Record<string, number>;
+  open_pediatric_care_gaps: number;
+  guardian_authorized_rate: number;
+  generated_at: string;
+}
+
+export interface AdultPopulationResponse {
+  total_adult: number;
+  eligible_for_ifhas: number;
+  completed_ifhas: number;
+  ifhas_coverage_percentage: number;
+  overdue_ifhas: number;
+  cardiometabolic_risk_distribution: Record<string, number>;
+  open_adult_care_gaps: number;
+  referral_completion_rate: number;
+  generated_at: string;
+}
+
+export interface GeographicRegionMetric {
+  region_code: string;
+  region_name_en: string;
+  region_name_ar: string;
+  registered_population: number | string;
+  eligible_population: number | string;
+  completed_screenings: number | string;
+  screening_coverage_percentage?: number | null;
+  is_suppressed: boolean;
+}
+
+export interface GeographicAnalyticsResponse {
+  regions: GeographicRegionMetric[];
+  small_cell_threshold: number;
+  suppression_applied: boolean;
+  generated_at: string;
+}
+
+export interface PopulationEquityResponse {
+  benchmark_region: string;
+  subgroup_metrics: Array<Record<string, any>>;
+  disparity_ratios: Record<string, number>;
+  data_completeness_by_subgroup: Record<string, number>;
+  ml_fairness_evaluation: Record<string, any>;
+  generated_at: string;
+}
+
+export interface TrendPoint {
+  period: string;
+  completed_screenings: number;
+  new_care_gaps: number;
+  closed_care_gaps: number;
+  screening_coverage_percentage: number;
+}
+
+export interface PopulationTrendsResponse {
+  timeframe: string;
+  trend_points: TrendPoint[];
+  generated_at: string;
+}
+
+// ==========================================
+// PHASE 13: OFFLINE-FIRST CHW APPLICATION
+// ==========================================
+
+export interface DeviceRegisterRequest {
+  device_id: string;
+  device_model?: string;
+  os_platform?: string;
+  app_version?: string;
+}
+
+export interface DeviceRegisterResponse {
+  registration_id: string;
+  device_id: string;
+  user_id: string;
+  status: string;
+  registered_at: string;
+}
+
+export interface OfflinePatientSummary {
+  patient_id: string;
+  full_name: string;
+  date_of_birth?: string | null;
+  gender: string;
+  emirates_id?: string | null;
+  last_screening_date?: string | null;
+  assigned_until: string;
+  active_care_gaps_count: number;
+}
+
+export interface OfflineAssignmentPackageResponse {
+  chw_user_id: string;
+  organization_id: string;
+  assigned_patients: OfflinePatientSummary[];
+  package_timestamp: string;
+  expires_at: string;
+}
+
+export interface OfflineSyncOperationRequest {
+  operation_id: string;
+  idempotency_key: string;
+  resource_type: string;
+  operation_type: string;
+  client_timestamp: string;
+  payload: Record<string, any>;
+}
+
+export interface OfflineSyncBatchRequest {
+  device_id: string;
+  operations: OfflineSyncOperationRequest[];
+}
+
+export interface SyncOperationResult {
+  operation_id: string;
+  status: string;
+  resource_id?: string | null;
+  server_timestamp: string;
+  error_message?: string | null;
+}
+
+export interface OfflineSyncBatchResponse {
+  batch_id: string;
+  total_processed: number;
+  synced_count: number;
+  conflict_count: number;
+  rejected_count: number;
+  results: SyncOperationResult[];
+  server_time: string;
+}
+
+export interface SyncConflictResponse {
+  conflict_id: string;
+  operation_id: string;
+  resource_type: string;
+  resource_id: string;
+  patient_id: string;
+  user_id: string;
+  conflict_reason: string;
+  client_payload: Record<string, any>;
+  server_payload: Record<string, any>;
+  resolution_status: string;
+  created_at: string;
+}
+
+export interface ResolveConflictRequest {
+  resolution: 'ACCEPT_CLIENT' | 'KEEP_SERVER';
+  notes?: string;
+}
+
+// ==========================================
+// PHASE 14: HEALTHCARE INTEROPERABILITY
+// ==========================================
+
+export interface IntegrationProviderResponse {
+  provider_name: string;
+  display_name: string;
+  provider_type: string;
+  status: string;
+  endpoint_url?: string | null;
+  is_enabled: boolean;
+  prerequisites: string[];
+  last_heartbeat_at?: string | null;
+}
+
+export interface FhirExportResponse {
+  patient_id: string;
+  bundle: Record<string, any>;
+  exported_at: string;
+}
+
+export interface FhirIngestResponse {
+  status: string;
+  patient_id?: string | null;
+  resources_ingested: number;
+  observations_created: number;
+  encounters_created: number;
+  provenance_id: string;
+  timestamp: string;
+}
+
+export interface TerminologyLookupResponse {
+  internal_code: string;
+  display_name: string;
+  target_system: string;
+  target_code: string;
+  target_display: string;
+  ucum_unit?: string | null;
+  status: string;
+}
+
+export interface IntegrationMonitoringResponse {
+  total_providers: number;
+  configured_providers: number;
+  not_configured_providers: number;
+  providers: IntegrationProviderResponse[];
+  recent_jobs: Array<Record<string, any>>;
+  generated_at: string;
+}

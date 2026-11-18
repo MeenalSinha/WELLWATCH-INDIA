@@ -16,6 +16,9 @@ from backend.app.api.v1.endpoints import (
     recommendations,
     screenings,
     users,
+    population,
+    offline,
+    integrations,
 )
 
 api_router = APIRouter()
@@ -31,6 +34,9 @@ api_router.include_router(recommendations.router, prefix="/recommendations", tag
 api_router.include_router(care_plans.router, prefix="/care-plans", tags=["Preventive Care Plans"])
 api_router.include_router(outreach.router, prefix="/outreach", tags=["Cultural Outreach & Multilingual Intelligence"])
 api_router.include_router(navigation.router, prefix="/navigation", tags=["Care Navigation & Closed-Loop Follow-Up"])
+api_router.include_router(population.router, prefix="/population", tags=["Population Health Intelligence"])
+api_router.include_router(offline.router, prefix="/offline", tags=["Offline-First CHW Operations"])
+api_router.include_router(integrations.router, prefix="/integrations", tags=["Healthcare Interoperability & External Integrations"])
 api_router.include_router(organizations.router, prefix="/organizations", tags=["Healthcare Organizations"])
 api_router.include_router(guardians.router, prefix="/guardians", tags=["Pediatric Guardianship"])
 api_router.include_router(consent.router, prefix="/consent", tags=["Consent & Privacy"])

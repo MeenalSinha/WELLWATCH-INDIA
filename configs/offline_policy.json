@@ -1,0 +1,30 @@
+{
+  "policy_name": "Community Health Worker Offline Operations Policy",
+  "policy_version": "1.0.0",
+  "effective_date": "2026-01-01",
+  "offline_assignment": {
+    "max_duration_hours": 72,
+    "max_patients_per_chw": 50,
+    "require_active_device_registration": true,
+    "auto_expire_on_session_logout": true
+  },
+  "synchronization": {
+    "batch_size_limit": 25,
+    "retry_backoff_base_seconds": 5,
+    "max_retries": 3,
+    "idempotency_window_days": 14,
+    "require_server_acknowledgment": true
+  },
+  "conflict_resolution": {
+    "clinical_observations_strategy": "MANUAL_CLINICAL_REVIEW",
+    "care_gap_closure_strategy": "STRICT_SERVER_VERIFICATION",
+    "silent_overwrites_allowed": false,
+    "preserve_both_versions": true
+  },
+  "local_security": {
+    "storage_backend": "IndexedDB",
+    "require_device_binding": true,
+    "forbid_plain_localstorage_for_phi": true,
+    "purge_on_tamper_detected": true
+  }
+}

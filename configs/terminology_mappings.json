@@ -1,0 +1,98 @@
+{
+  "system_version": "1.0.0",
+  "approval_status": "APPROVED",
+  "effective_date": "2026-01-01",
+  "governing_body": "Department of Health Abu Dhabi (DoH) / Malaffi Integration Specifications",
+  "mappings": [
+    {
+      "internal_code": "SYSTOLIC_BP",
+      "display_name": "Systolic Blood Pressure",
+      "target_system": "http://loinc.org",
+      "target_code": "8480-6",
+      "target_display": "Systolic blood pressure",
+      "ucum_unit": "mm[Hg]",
+      "mapping_relationship": "EQUIVALENT",
+      "status": "APPROVED"
+    },
+    {
+      "internal_code": "DIASTOLIC_BP",
+      "display_name": "Diastolic Blood Pressure",
+      "target_system": "http://loinc.org",
+      "target_code": "8462-4",
+      "target_display": "Diastolic blood pressure",
+      "ucum_unit": "mm[Hg]",
+      "mapping_relationship": "EQUIVALENT",
+      "status": "APPROVED"
+    },
+    {
+      "internal_code": "BODY_MASS_INDEX",
+      "display_name": "Body Mass Index",
+      "target_system": "http://loinc.org",
+      "target_code": "39156-5",
+      "target_display": "Body mass index (BMI) [Ratio]",
+      "ucum_unit": "kg/m2",
+      "mapping_relationship": "EQUIVALENT",
+      "status": "APPROVED"
+    },
+    {
+      "internal_code": "FASTING_BLOOD_GLUCOSE",
+      "display_name": "Fasting Blood Glucose",
+      "target_system": "http://loinc.org",
+      "target_code": "15074-8",
+      "target_display": "Glucose [Moles/volume] in Blood",
+      "ucum_unit": "mg/dL",
+      "mapping_relationship": "EQUIVALENT",
+      "status": "APPROVED"
+    },
+    {
+      "internal_code": "HBA1C",
+      "display_name": "Hemoglobin A1c",
+      "target_system": "http://loinc.org",
+      "target_code": "4548-4",
+      "target_display": "Hemoglobin A1c/Hemoglobin.total in Blood",
+      "ucum_unit": "%",
+      "mapping_relationship": "EQUIVALENT",
+      "status": "APPROVED"
+    },
+    {
+      "internal_code": "WELL_CHILD_EXAMINATION",
+      "display_name": "Pediatric Well Child Examination",
+      "target_system": "http://hl7.org/fhir/sid/icd-10",
+      "target_code": "Z00.129",
+      "target_display": "Encounter for routine child health examination without abnormal findings",
+      "ucum_unit": null,
+      "mapping_relationship": "EQUIVALENT",
+      "status": "APPROVED"
+    },
+    {
+      "internal_code": "IFHAS_COMPREHENSIVE_SCREENING",
+      "display_name": "ADPHC IFHAS Comprehensive Screening",
+      "target_system": "http://snomed.info/sct",
+      "target_code": "171149006",
+      "target_display": "Screening examination (procedure)",
+      "ucum_unit": null,
+      "mapping_relationship": "EQUIVALENT",
+      "status": "APPROVED"
+    },
+    {
+      "internal_code": "HYPERTENSION",
+      "display_name": "Essential Hypertension",
+      "target_system": "http://hl7.org/fhir/sid/icd-10",
+      "target_code": "I10",
+      "target_display": "Essential (primary) hypertension",
+      "ucum_unit": null,
+      "mapping_relationship": "EQUIVALENT",
+      "status": "APPROVED"
+    },
+    {
+      "internal_code": "TYPE_2_DIABETES",
+      "display_name": "Type 2 Diabetes Mellitus",
+      "target_system": "http://hl7.org/fhir/sid/icd-10",
+      "target_code": "E11",
+      "target_display": "Type 2 diabetes mellitus",
+      "ucum_unit": null,
+      "mapping_relationship": "EQUIVALENT",
+      "status": "APPROVED"
+    }
+  ]
+}

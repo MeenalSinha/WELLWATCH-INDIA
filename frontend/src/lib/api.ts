@@ -34,6 +34,27 @@ import {
   FollowUpTaskResponse,
   CareGapClosureResponse,
   NavigationAnalyticsResponse,
+  // Phase 12
+  PopulationOverviewResponse,
+  PediatricPopulationResponse,
+  AdultPopulationResponse,
+  GeographicAnalyticsResponse,
+  PopulationEquityResponse,
+  PopulationTrendsResponse,
+  // Phase 13
+  DeviceRegisterRequest,
+  DeviceRegisterResponse,
+  OfflineAssignmentPackageResponse,
+  OfflineSyncBatchRequest,
+  OfflineSyncBatchResponse,
+  SyncConflictResponse,
+  ResolveConflictRequest,
+  // Phase 14
+  IntegrationProviderResponse,
+  FhirExportResponse,
+  FhirIngestResponse,
+  TerminologyLookupResponse,
+  IntegrationMonitoringResponse,
 } from '@/types';
 import { getStoredToken } from './auth';
 
@@ -353,4 +374,85 @@ export const apiClient = {
   // Audit Logs (Phases 1-3)
   listAuditLogs: (skip = 0, limit = 50) =>
     request<AuditLog[]>(`/audit/logs?skip=${skip}&limit=${limit}`),
+
+  // ==========================================
+  // Phase 12: Population Health Intelligence
+  // ==========================================
+  getPopulationOverview: (orgId?: string, timeWindowDays = 90) => {
+    const params = new URLSearchParams();
+    if (orgId) params.set('organization_id', orgId);
+    params.set('time_window_days', timeWindowDays.toString());
+    return request<PopulationOverviewResponse>(`/population/overview?${params.toString()}`);
+  },
+  getPediatricPopulation: (orgId?: string) => {
+    const params = new URLSearchParams();
+    if (orgId) params.set('organization_id', orgId);
+    return request<PediatricPopulationResponse>(`/population/pediatric?${params.toString()}`);
+  },
+  getAdultPopulation: (orgId?: string) => {
+    const params = new URLSearchParams();
+    if (orgId) params.set('organization_id', orgId);
+    return request<AdultPopulationResponse>(`/population/adult?${params.toString()}`);
+  },
+  getGeographicAnalytics: (orgId?: string) => {
+    const params = new URLSearchParams();
+    if (orgId) params.set('organization_id', orgId);
+    return request<GeographicAnalyticsResponse>(`/population/geographic?${params.toString()}`);
+  },
+  getPopulationEquity: (orgId?: string) => {
+    const params = new URLSearchParams();
+    if (orgId) params.set('organization_id', orgId);
+    return request<PopulationEquityResponse>(`/population/equity?${params.toString()}`);
+  },
+  getPopulationTrends: (orgId?: string, timeframe = 'monthly') => {
+    const params = new URLSearchParams();
+    if (orgId) params.set('organization_id', orgId);
+    params.set('timeframe', timeframe);
+    return request<PopulationTrendsResponse>(`/population/trends?${params.toString()}`);
+  },
+  generatePopulationReport: (payload: { report_type: string; time_window_days?: number; organization_id?: string }) =>
+    request<any>('/population/reports/generate', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  // ==========================================
+  // Phase 13: Offline-First CHW Application
+  // ==========================================
+  registerOfflineDevice: (payload: DeviceRegisterRequest) =>
+    request<DeviceRegisterResponse>('/offline/devices/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getOfflineAssignments: (durationHours = 72) =>
+    request<OfflineAssignmentPackageResponse>(`/offline/assignments/current?duration_hours=${durationHours}`),
+  syncOfflineBatch: (payload: OfflineSyncBatchRequest) =>
+    request<OfflineSyncBatchResponse>('/offline/sync', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getSyncConflicts: (status = 'PENDING') =>
+    request<SyncConflictResponse[]>(`/offline/conflicts?status=${status}`),
+  resolveSyncConflict: (conflictId: string, payload: ResolveConflictRequest) =>
+    request<{ status: string; conflict_id: string; resolution: string }>(`/offline/conflicts/${conflictId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  // ==========================================
+  // Phase 14: Healthcare Interoperability
+  // ==========================================
+  getIntegrationProviders: () =>
+    request<IntegrationProviderResponse[]>('/integrations/providers'),
+  exportFhirPatient: (patientId: string) =>
+    request<FhirExportResponse>(`/integrations/export/fhir/patient/${patientId}`),
+  ingestFhirBundle: (payload: { bundle: Record<string, any>; source_system: string }) =>
+    request<FhirIngestResponse>('/integrations/ingest/fhir', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getIntegrationMonitoring: () =>
+    request<IntegrationMonitoringResponse>('/integrations/monitoring'),
+  lookupTerminology: (system: string, code: string) =>
+    request<TerminologyLookupResponse>(`/integrations/terminology/lookup?system=${system}&code=${code}`),
 };

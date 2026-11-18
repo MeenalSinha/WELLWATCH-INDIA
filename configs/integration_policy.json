@@ -1,0 +1,75 @@
+{
+  "policy_name": "Healthcare Interoperability & External Integrations Policy",
+  "policy_version": "1.0.0",
+  "effective_date": "2026-01-01",
+  "governing_body": "Department of Health Abu Dhabi (DoH) & UAE Health Data Law",
+  "standards": {
+    "fhir_version": "R4",
+    "supported_profiles": [
+      "http://hl7.org/fhir/StructureDefinition/Patient",
+      "http://hl7.org/fhir/StructureDefinition/Observation",
+      "http://hl7.org/fhir/StructureDefinition/Encounter",
+      "http://hl7.org/fhir/StructureDefinition/ServiceRequest",
+      "http://hl7.org/fhir/StructureDefinition/CarePlan"
+    ],
+    "identity_system": "http://fhir.doh.gov.ae/identifier/emirates-id"
+  },
+  "data_residency": {
+    "jurisdiction": "Abu Dhabi, United Arab Emirates",
+    "cross_border_transfer_allowed": false,
+    "on_premise_or_sovereign_cloud_only": true
+  },
+  "adapters": {
+    "malaffi": {
+      "name": "Malaffi HIE",
+      "display_name": "Abu Dhabi Health Information Exchange (Malaffi)",
+      "required_credentials": ["MALAFFI_API_URL", "MALAFFI_CLIENT_ID", "MALAFFI_CLIENT_SECRET", "MALAFFI_FACILITY_ID"],
+      "default_status": "NOT_CONFIGURED",
+      "timeout_seconds": 30,
+      "max_retries": 3,
+      "prerequisites": [
+        "DoH Abu Dhabi Health Information Exchange Participant Agreement",
+        "Malaffi Production/Sandbox Access Onboarding Approval",
+        "Mutual TLS (mTLS) Client Certificate Issued by UAE Health PKI",
+        "Registered Facility ID with Department of Health"
+      ]
+    },
+    "seha_emr": {
+      "name": "SEHA EMR",
+      "display_name": "Abu Dhabi Health Services Co. (SEHA) EMR Interface",
+      "required_credentials": ["SEHA_EMR_API_URL", "SEHA_API_KEY"],
+      "default_status": "NOT_CONFIGURED",
+      "timeout_seconds": 20,
+      "max_retries": 3,
+      "prerequisites": [
+        "SEHA Clinical Integration Service Level Agreement",
+        "Secure VPN / Private Endpoint Link",
+        "SEHA Partner API Authorization Token"
+      ]
+    },
+    "lab_network": {
+      "name": "Abu Dhabi Laboratory Network",
+      "display_name": "National Reference Laboratory & Abu Dhabi Lab Network",
+      "required_credentials": ["LAB_NETWORK_API_URL", "LAB_NETWORK_TOKEN"],
+      "default_status": "NOT_CONFIGURED",
+      "timeout_seconds": 25,
+      "max_retries": 2,
+      "prerequisites": [
+        "Clinical Laboratory Data Exchange Authorization",
+        "Diagnostic Result Encryption Keys"
+      ]
+    },
+    "uae_pass": {
+      "name": "UAE PASS",
+      "display_name": "National Digital Identity (UAE PASS)",
+      "required_credentials": ["UAE_PASS_CLIENT_ID", "UAE_PASS_CLIENT_SECRET", "UAE_PASS_REDIRECT_URI"],
+      "default_status": "NOT_CONFIGURED",
+      "timeout_seconds": 15,
+      "max_retries": 2,
+      "prerequisites": [
+        "Telecommunications and Digital Government Regulatory Authority (TDRA) Staging Access",
+        "Registered Digital Identity App Certificate"
+      ]
+    }
+  }
+}

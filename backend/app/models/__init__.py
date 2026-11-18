@@ -82,6 +82,32 @@ from backend.app.models.navigation import (
     FollowUpStatus,
     RecallStatus,
 )
+# Phase 12: Population Health Intelligence
+from backend.app.models.population import (
+    PopulationMetricSnapshot,
+    AnalyticsAccessLog,
+    MetricCategory,
+)
+# Phase 13: Offline-First CHW
+from backend.app.models.offline import (
+    DeviceRegistration,
+    OfflineAssignment,
+    SyncOperationAudit,
+    SyncConflict,
+    DeviceStatus,
+    OfflineAssignmentStatus,
+    SyncOperationStatus,
+    ConflictResolutionStatus,
+)
+# Phase 14: Healthcare Interoperability
+from backend.app.models.integration import (
+    IntegrationProvider,
+    IntegrationJobLog,
+    ProvenanceRecord,
+    ProviderType,
+    IntegrationStatus,
+    JobExecutionStatus,
+)
 
 __all__ = [
     "BaseDBModel",
@@ -165,4 +191,24 @@ __all__ = [
     "ReferralStatus",
     "FollowUpStatus",
     "RecallStatus",
+    # Phase 12
+    "PopulationMetricSnapshot",
+    "AnalyticsAccessLog",
+    "MetricCategory",
+    # Phase 13
+    "DeviceRegistration",
+    "OfflineAssignment",
+    "SyncOperationAudit",
+    "SyncConflict",
+    "DeviceStatus",
+    "OfflineAssignmentStatus",
+    "SyncOperationStatus",
+    "ConflictResolutionStatus",
+    # Phase 14
+    "IntegrationProvider",
+    "IntegrationJobLog",
+    "ProvenanceRecord",
+    "ProviderType",
+    "IntegrationStatus",
+    "JobExecutionStatus",
 ]

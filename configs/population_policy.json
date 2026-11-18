@@ -1,0 +1,44 @@
+{
+  "policy_name": "Abu Dhabi Population Health Intelligence Policy",
+  "policy_version": "1.0.0",
+  "effective_date": "2026-01-01",
+  "governing_body": "Abu Dhabi Public Health Centre (ADPHC) & Department of Health Abu Dhabi (DoH)",
+  "privacy_controls": {
+    "small_cell_suppression_threshold": 5,
+    "suppression_label": "< 5",
+    "apply_complementary_suppression": true,
+    "prevent_differencing_attacks": true,
+    "log_aggregate_queries": true
+  },
+  "geographic_regions": [
+    {
+      "code": "AD_CENTRAL",
+      "name_en": "Abu Dhabi Metropolitan & Central",
+      "name_ar": "منطقة أبوظبي وضواحيها",
+      "is_active": true
+    },
+    {
+      "code": "AL_AIN",
+      "name_en": "Al Ain Region",
+      "name_ar": "منطقة العين",
+      "is_active": true
+    },
+    {
+      "code": "AL_DHAFRA",
+      "name_en": "Al Dhafra Region",
+      "name_ar": "منطقة الظفرة",
+      "is_active": true
+    }
+  ],
+  "equity_framework": {
+    "benchmark_subgroup": "AD_CENTRAL",
+    "disparity_threshold_warning": 0.80,
+    "disparity_threshold_critical": 0.60,
+    "require_ground_truth_for_ml_fairness": true
+  },
+  "reporting_defaults": {
+    "default_period_days": 90,
+    "max_export_records": 10000,
+    "cache_ttl_seconds": 300
+  }
+}
