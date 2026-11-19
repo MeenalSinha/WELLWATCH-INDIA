@@ -30,7 +30,9 @@ def register_device(
 
 
 @router.get("/assignments", response_model=OfflineAssignmentPackageResponse)
+@router.get("/assignments/current", response_model=OfflineAssignmentPackageResponse)
 def get_offline_assignments(
+    duration_hours: int = Query(72),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -50,12 +52,14 @@ def process_sync_batch(
 
 @router.get("/conflicts", response_model=List[SyncConflictResponse])
 def get_conflicts(
+    status: Optional[str] = Query(None),
     status_filter: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Lists clinical synchronization conflicts for clinician/supervisor reconciliation."""
-    return OfflineSyncService.get_conflicts(db=db, user=current_user, status_filter=status_filter)
+    eff_status = status or status_filter
+    return OfflineSyncService.get_conflicts(db=db, user=current_user, status_filter=eff_status)
 
 
 @router.post("/conflicts/{conflict_id}/resolve", response_model=SyncConflictResponse)

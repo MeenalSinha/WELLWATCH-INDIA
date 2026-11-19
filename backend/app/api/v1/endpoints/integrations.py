@@ -42,6 +42,9 @@ def test_provider_health(
 
 
 @router.post("/fhir/export/patient/{patient_id}", response_model=FhirExportResponse)
+@router.get("/fhir/export/patient/{patient_id}", response_model=FhirExportResponse)
+@router.get("/export/fhir/patient/{patient_id}", response_model=FhirExportResponse)
+@router.post("/export/fhir/patient/{patient_id}", response_model=FhirExportResponse)
 def export_patient_fhir(
     patient_id: str,
     db: Session = Depends(get_db),
@@ -54,6 +57,7 @@ def export_patient_fhir(
 
 
 @router.post("/fhir/ingest", response_model=FhirIngestResponse)
+@router.post("/ingest/fhir", response_model=FhirIngestResponse)
 def ingest_fhir_bundle(
     payload: FhirIngestRequest,
     db: Session = Depends(get_db),
