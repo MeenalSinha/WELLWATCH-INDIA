@@ -2,7 +2,7 @@
 ### Life-Course Preventive Care Intelligence
 **Tagline: From Health Signals to Preventive Action.**
 
-[![CI Pipeline](https://github.com/wellwatch-prevent/wellwatch-prevent/actions/workflows/ci.yml/badge.svg)](https://github.com/wellwatch-prevent/wellwatch-prevent/actions)
+[![CI Pipeline](https://github.com/MeenalSinha/WELLWATCH-INDIA/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MeenalSinha/WELLWATCH-INDIA/actions/workflows/ci.yml)
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
