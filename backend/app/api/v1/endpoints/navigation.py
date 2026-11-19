@@ -76,7 +76,8 @@ def list_appointments(
         query = query.filter(Appointment.person_id == person_id)
     if status:
         query = query.filter(Appointment.status == status)
-    if current_user.role.value != "SYSTEM_ADMIN":
+    user_role = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
+    if user_role != "SYSTEM_ADMIN":
         query = query.filter(Appointment.organization_id == current_user.organization_id)
     return query.order_by(Appointment.scheduled_time.desc()).limit(limit).all()
 
@@ -138,7 +139,8 @@ def list_referrals(
         query = query.filter(Referral.person_id == person_id)
     if status:
         query = query.filter(Referral.status == status)
-    if current_user.role.value != "SYSTEM_ADMIN":
+    user_role = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
+    if user_role != "SYSTEM_ADMIN":
         query = query.filter(Referral.organization_id == current_user.organization_id)
     return query.order_by(Referral.created_at.desc()).limit(limit).all()
 
@@ -179,7 +181,8 @@ def list_follow_ups(
         query = query.filter(FollowUpTask.person_id == person_id)
     if status:
         query = query.filter(FollowUpTask.status == status)
-    if current_user.role.value != "SYSTEM_ADMIN":
+    user_role = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
+    if user_role != "SYSTEM_ADMIN":
         query = query.filter(FollowUpTask.organization_id == current_user.organization_id)
     return query.order_by(FollowUpTask.due_date.asc()).limit(limit).all()
 
@@ -236,9 +239,10 @@ def get_navigation_analytics(
     """
     Closed-loop navigation analytics: attendance rate, completed referrals, and verified care gaps.
     """
+    user_role = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
     stats = NavigationService.get_navigation_analytics(
         db=db,
-        organization_id=current_user.organization_id if current_user.role.value != "SYSTEM_ADMIN" else None,
+        organization_id=current_user.organization_id if user_role != "SYSTEM_ADMIN" else None,
     )
     return NavigationAnalyticsResponse(**stats)
 
@@ -275,7 +279,8 @@ def list_recalls(
     """
     List screening recall tasks scoped by organization.
     """
-    org_id = current_user.organization_id if current_user.role.value != "SYSTEM_ADMIN" else None
+    user_role = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
+    org_id = current_user.organization_id if user_role != "SYSTEM_ADMIN" else None
     return NavigationService.get_recalls(
         db=db,
         person_id=person_id,

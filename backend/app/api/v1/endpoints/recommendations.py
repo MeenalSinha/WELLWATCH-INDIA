@@ -53,10 +53,11 @@ def list_recommendations(
     Retrieve recommendations with pagination, filtering by status and priority.
     Enforces multi-tenant organizational boundary.
     """
+    user_role_str = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
     total, items = RecommendationService.get_recommendations(
         db=db,
         person_id=person_id,
-        organization_id=current_user.organization_id if current_user.role.value != "SYSTEM_ADMIN" else None,
+        organization_id=current_user.organization_id if user_role_str != "SYSTEM_ADMIN" else None,
         status=status,
         priority=priority,
         limit=limit,
@@ -95,10 +96,12 @@ def explain_recommendation(
         recommendation_id=recommendation_id,
         current_user=current_user,
     )
+    cat_str = rec.category.value if hasattr(rec.category, "value") else str(rec.category)
+    pri_str = rec.priority.value if hasattr(rec.priority, "value") else str(rec.priority)
     return RecommendationExplanation(
         recommendation_id=rec.id,
-        category=rec.category.value,
-        priority=rec.priority.value,
+        category=cat_str,
+        priority=pri_str,
         clinical_rationale=rec.clinical_rationale,
         source_guideline=rec.source_guideline,
         trigger_rule_id=rec.rule_id,
@@ -108,7 +111,7 @@ def explain_recommendation(
         requires_human_review=rec.requires_human_review,
         justification_summary=(
             f"Generated under {rec.source_guideline} (Rule {rec.rule_id}) for care gap '{rec.care_gap_id or 'GENERAL'}'. "
-            f"Priority {rec.priority.value} with clinical confidence status '{rec.uncertainty_status}'."
+            f"Priority {pri_str} with clinical confidence status '{rec.uncertainty_status}'."
         ),
     )
 

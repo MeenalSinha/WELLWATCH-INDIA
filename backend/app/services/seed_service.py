@@ -625,8 +625,12 @@ def seed_initial_development_data(db: Session) -> Dict[str, Any]:
         db.add(assessment)
         db.commit()
         db.refresh(assessment)
+    else:
+        assessment = existing_assessment
 
-        # Recommendation 1: Lipid Panel Screening
+    # Decoupled Preventive Recommendations for Zayed
+    existing_recs = db.query(PreventiveRecommendation).filter(PreventiveRecommendation.person_id == zayed.id).all()
+    if not existing_recs:
         rec1 = PreventiveRecommendation(
             organization_id=primary_org.id,
             person_id=zayed.id,
@@ -647,7 +651,6 @@ def seed_initial_development_data(db: Session) -> Dict[str, Any]:
             target_date=now + timedelta(days=76),
         )
 
-        # Recommendation 2: Lifestyle Wellness Counseling
         rec2 = PreventiveRecommendation(
             organization_id=primary_org.id,
             person_id=zayed.id,
@@ -671,10 +674,58 @@ def seed_initial_development_data(db: Session) -> Dict[str, Any]:
         db.add_all([rec1, rec2])
         db.commit()
         db.refresh(rec1)
+        db.refresh(rec2)
+    else:
+        rec1 = existing_recs[0]
+        rec2 = existing_recs[1] if len(existing_recs) > 1 else existing_recs[0]
 
-        # ---------------------------------------------------------------------
-        # 9. PREVENTIVE CARE PLAN & ITEMS
-        # ---------------------------------------------------------------------
+    # Additional Recommendations for Baby Zayed (Pediatric Well-Child & Developmental)
+    existing_baby_recs = db.query(PreventiveRecommendation).filter(PreventiveRecommendation.person_id == baby.id).all()
+    if not existing_baby_recs:
+        rec_baby1 = PreventiveRecommendation(
+            organization_id=primary_org.id,
+            person_id=baby.id,
+            pathway_id="DOH_PEDIATRIC_WELL_CHILD_V1",
+            care_gap_id="WELL_CHILD_18M_MILESTONE",
+            category=RecommendationCategory.DEVELOPMENTAL_SCREENING,
+            priority=RecommendationPriority.HIGH,
+            lifecycle_status=RecommendationLifecycleStatus.APPROVED,
+            recommended_action="18-Month ASQ-3 & M-CHAT-R Developmental Screening",
+            clinical_rationale="Routine developmental and autism spectrum screening at 18 months per DoH Child Health Standards.",
+            supporting_evidence={"milestone_screening_at_12m": "COMPLETED", "age_months": 18},
+            source_guideline="DoH Abu Dhabi Child Health & Developmental Guidelines 2026",
+            uncertainty_status="CONFIRMED",
+            rule_id="DOH-REC-PEDIATRIC-18M",
+            rule_version="1.0.0",
+            requires_human_review=False,
+            target_date=now + timedelta(days=30),
+        )
+        rec_baby2 = PreventiveRecommendation(
+            organization_id=primary_org.id,
+            person_id=baby.id,
+            pathway_id="DOH_PEDIATRIC_VACCINATION_V1",
+            care_gap_id="VACCINE_MMR_VARICELLA_DOSE2",
+            category=RecommendationCategory.WELL_CHILD_VISIT,
+            priority=RecommendationPriority.CRITICAL,
+            lifecycle_status=RecommendationLifecycleStatus.PENDING_CLINICAL_REVIEW,
+            recommended_action="Administer MMR and Varicella Dose 2 Pediatric Immunizations",
+            clinical_rationale="National Immunization Schedule mandate for toddlers aged 18 months.",
+            supporting_evidence={"previous_vaccine_dose1": "COMPLETED"},
+            source_guideline="UAE National Immunization Program / DoH Schedule",
+            uncertainty_status="CONFIRMED",
+            rule_id="DOH-REC-VACCINE-18M",
+            rule_version="1.0.0",
+            requires_human_review=True,
+            target_date=now + timedelta(days=14),
+        )
+        db.add_all([rec_baby1, rec_baby2])
+        db.commit()
+
+    # -------------------------------------------------------------------------
+    # 9. PREVENTIVE CARE PLAN & ITEMS
+    # -------------------------------------------------------------------------
+    existing_care_plan = db.query(PreventiveCarePlan).filter(PreventiveCarePlan.person_id == zayed.id).first()
+    if not existing_care_plan:
         care_plan = PreventiveCarePlan(
             organization_id=primary_org.id,
             person_id=zayed.id,
@@ -705,10 +756,14 @@ def seed_initial_development_data(db: Session) -> Dict[str, Any]:
         )
         db.add(cp_item)
         db.commit()
+    else:
+        care_plan = existing_care_plan
 
-        # ---------------------------------------------------------------------
-        # 10. APPOINTMENT & REFERRAL
-        # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # 10. APPOINTMENT & REFERRAL
+    # -------------------------------------------------------------------------
+    existing_appt = db.query(Appointment).filter(Appointment.person_id == zayed.id).first()
+    if not existing_appt:
         appt = Appointment(
             organization_id=primary_org.id,
             person_id=zayed.id,

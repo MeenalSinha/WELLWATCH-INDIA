@@ -82,10 +82,11 @@ def list_outreach_tasks(
     """
     List outreach tasks with delivery status and pagination.
     """
+    user_role_str = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
     total, items = OutreachService.get_outreach_tasks(
         db=db,
         person_id=person_id,
-        organization_id=current_user.organization_id if current_user.role.value != "SYSTEM_ADMIN" else None,
+        organization_id=current_user.organization_id if user_role_str != "SYSTEM_ADMIN" else None,
         delivery_status=delivery_status,
         limit=limit,
         offset=offset,
@@ -174,8 +175,9 @@ def get_outreach_analytics(
     """
     Operational outreach metrics: delivery rates, suppression, channel breakdowns, and honest provider status.
     """
+    user_role_str = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
     stats = OutreachService.get_analytics(
         db=db,
-        organization_id=current_user.organization_id if current_user.role.value != "SYSTEM_ADMIN" else None,
+        organization_id=current_user.organization_id if user_role_str != "SYSTEM_ADMIN" else None,
     )
     return OutreachAnalyticsResponse(**stats)

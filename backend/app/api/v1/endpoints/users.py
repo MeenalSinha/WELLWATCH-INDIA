@@ -33,7 +33,7 @@ def create_user(
         email=user_in.email.lower().strip(),
         full_name=user_in.full_name,
         password_hash=get_password_hash(user_in.password),
-        role=user_in.role.value,
+        role=user_in.role.value if hasattr(user_in.role, "value") else str(user_in.role),
         phone_number=user_in.phone_number,
         organization_id=user_in.organization_id,
         is_active=True,
