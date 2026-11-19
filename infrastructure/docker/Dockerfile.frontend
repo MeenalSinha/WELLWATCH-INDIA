@@ -11,7 +11,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY frontend ./
 
-RUN mkdir -p /app/public
+RUN mkdir -p /app/public && touch /app/public/.gitkeep
 
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build

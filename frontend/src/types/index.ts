@@ -28,6 +28,7 @@ export interface TokenResponse {
   user_id: string;
   role: UserRole;
   full_name: string;
+  email?: string;
   organization_id?: string;
 }
 
@@ -120,6 +121,8 @@ export interface PersonSummary {
   district?: string;
   preferred_language: string;
   primary_identifier_masked?: string;
+  identifier_value?: string;
+  record_status?: string;
   is_high_risk: boolean;
   created_at: string;
 }
@@ -476,8 +479,10 @@ export interface OutreachTaskResponse {
   language: string;
   message_body: string;
   scheduled_at: string;
+  scheduled_time?: string;
   attempted_at?: string;
   delivery_status: OutreachDeliveryStatus;
+  status?: string;
   provider_status: string;
   provider_message_id?: string;
   failure_reason?: string;

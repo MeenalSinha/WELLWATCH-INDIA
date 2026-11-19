@@ -1,6 +1,22 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import {
+  Users,
+  BarChart3,
+  ShieldCheck,
+  Building2,
+  Scale,
+  FileSpreadsheet,
+  AlertTriangle,
+  Info,
+  Calendar,
+  RefreshCw,
+  Baby,
+  HeartPulse,
+  MapPin,
+  Sparkles,
+} from 'lucide-react';
 import { apiClient, ApiError } from '@/lib/api';
 import {
   PopulationOverviewResponse,
@@ -10,6 +26,11 @@ import {
   PopulationEquityResponse,
   PopulationTrendsResponse,
 } from '@/types';
+import { AppShell } from '@/components/AppShell';
+import { MetricCard } from '@/components/MetricCard';
+import { StatusBadge } from '@/components/StatusBadge';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { CategoryBarChart, DonutChart, ProgressBar } from '@/components/DataVisuals';
 
 function PopulationHealthContent() {
   const [activeTab, setActiveTab] = useState<'overview' | 'pediatric' | 'adult' | 'geographic' | 'equity' | 'reports'>('overview');
@@ -71,7 +92,7 @@ function PopulationHealthContent() {
         time_window_days: timeWindowDays,
       });
       setGeneratedReport(res);
-      setSuccessMessage(`Governed ${reportType} report generated successfully.`);
+      setSuccessMessage(`Governed ${reportType} report generated and signed successfully.`);
     } catch (err: any) {
       setError(err instanceof ApiError ? err.message : 'Failed to generate population report.');
     } finally {
@@ -80,497 +101,510 @@ function PopulationHealthContent() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b pb-4 gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Population Health Intelligence</h1>
-            <span className="inline-flex items-center rounded-md bg-teal-50 px-2.5 py-0.5 text-xs font-semibold text-teal-800 border border-teal-200">
-              Phase 12 Production
-            </span>
-            <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-800 border border-blue-200">
-              ADPHC Standard 2026
-            </span>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Life-course population surveillance, precision prevention coverage, geographic equity and small-cell privacy protection.
-          </p>
-        </div>
-
-        {/* Reporting Window Selector */}
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-700">Reporting Window:</label>
-          <select
-            value={timeWindowDays}
-            onChange={(e) => setTimeWindowDays(Number(e.target.value))}
-            className="rounded-md border border-gray-300 bg-white py-1.5 px-3 text-sm shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-          >
-            <option value={30}>Last 30 Days</option>
-            <option value={90}>Last 90 Days (Quarterly)</option>
-            <option value={180}>Last 180 Days (Semi-Annual)</option>
-            <option value={365}>Last 365 Days (Annual)</option>
-          </select>
-          <button
-            onClick={loadData}
-            className="rounded-md bg-white border border-gray-300 py-1.5 px-3 text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm"
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Denominator Integrity Alert */}
-      <div className="rounded-md bg-blue-50 p-4 border border-blue-200">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-semibold text-blue-900">Mathematical Denominator Integrity Mandate</h3>
-            <div className="mt-1 text-xs text-blue-800 space-y-1">
-              <p>
-                To prevent epidemiological misinterpretation, all rates use distinct, governed denominators:
-                <strong> Registered Population</strong> (total cohort) ≠ <strong>Eligible Population</strong> (age/condition qualified) ≠ <strong>Completed Screenings</strong> (epistemically verified) ≠ <strong>Closed Care Gaps</strong> (documented clinical evidence).
-              </p>
+    <AppShell
+      pageTitle="Population Health Intelligence"
+      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Population Health' }]}
+    >
+      <div className="space-y-6">
+        {/* Page Top Header Bar */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                Population Health Intelligence
+              </h1>
+              <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-forest-50 text-forest-800 border border-forest-200">
+                ADPHC Standard 2026
+              </span>
+              <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">
+                Sovereign Privacy Guarded
+              </span>
             </div>
+            <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
+              Life-course population surveillance, precision prevention coverage, geographic equity, and small-cell privacy protection.
+            </p>
           </div>
-        </div>
-      </div>
 
-      {error && (
-        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 border border-red-200 flex justify-between items-center">
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 text-xs">Dismiss</button>
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="rounded-md bg-emerald-50 p-4 text-sm text-emerald-700 border border-emerald-200 flex justify-between items-center">
-          <span>{successMessage}</span>
-          <button onClick={() => setSuccessMessage(null)} className="text-emerald-500 hover:text-emerald-700 text-xs">Dismiss</button>
-        </div>
-      )}
-
-      {/* Navigation Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          {[
-            { id: 'overview', name: 'Executive Overview' },
-            { id: 'pediatric', name: 'Pediatric Well-Child' },
-            { id: 'adult', name: 'Adult IFHAS 2026' },
-            { id: 'geographic', name: 'Geographic Privacy Map' },
-            { id: 'equity', name: 'Equity & ML Fairness' },
-            { id: 'reports', name: 'Governed Reports' },
-          ].map((tab) => (
+          {/* Time Window Selector & Refresh */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex items-center gap-2 bg-[#F8FAF9] px-3 py-1.5 rounded-lg border border-slate-200">
+              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+              <select
+                value={timeWindowDays}
+                onChange={(e) => setTimeWindowDays(Number(e.target.value))}
+                className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none"
+              >
+                <option value={30}>Last 30 Days</option>
+                <option value={90}>Last 90 Days (Quarterly)</option>
+                <option value={180}>Last 180 Days (Semi-Annual)</option>
+                <option value={365}>Last 365 Days (Annual)</option>
+              </select>
+            </div>
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === tab.id
-                  ? 'border-teal-600 text-teal-700 font-semibold'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              onClick={loadData}
+              disabled={isLoading}
+              className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 transition"
+              title="Refresh telemetry"
             >
-              {tab.name}
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
-          ))}
-        </nav>
-      </div>
-
-      {isLoading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-teal-500 border-t-transparent"></div>
-          <p className="mt-2 text-sm text-gray-500">Calculating governed population metrics...</p>
+          </div>
         </div>
-      ) : (
-        <>
-          {/* TAB 1: EXECUTIVE OVERVIEW */}
-          {activeTab === 'overview' && overview && (
-            <div className="space-y-6">
-              {/* Metric KPI Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Registered</div>
-                  <div className="mt-2 text-3xl font-bold text-gray-900">{overview.total_registered}</div>
-                  <div className="mt-1 text-xs text-gray-500">
-                    Ped: {overview.pediatric_population} | Adult: {overview.adult_population} | Geri: {overview.geriatric_population}
-                  </div>
-                </div>
 
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Eligible Cohort</div>
-                  <div className="mt-2 text-3xl font-bold text-indigo-600">{overview.eligible_population}</div>
-                  <div className="mt-1 text-xs text-gray-500">
-                    Qualified for preventive protocols
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Screening Coverage</div>
-                  <div className="mt-2 text-3xl font-bold text-emerald-600">
-                    {overview.screening_coverage_percentage.toFixed(1)}%
-                  </div>
-                  <div className="mt-1 text-xs text-gray-500">
-                    {overview.completed_screenings} of {overview.eligible_population} eligible completed
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Confirmed Overdue</div>
-                  <div className="mt-2 text-3xl font-bold text-amber-600">{overview.confirmed_overdue}</div>
-                  <div className="mt-1 text-xs text-gray-500">
-                    Potentially overdue: {overview.potentially_overdue}
-                  </div>
-                </div>
-              </div>
-
-              {/* Care Navigation & Gap Closure Funnel */}
-              <div className="bg-white p-6 rounded-lg border shadow-sm space-y-4">
-                <h3 className="text-base font-semibold text-gray-900">Life-Course Care Navigation & Closure Funnel</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 pt-2">
-                  <div className="bg-gray-50 p-4 rounded-md border text-center">
-                    <div className="text-xs font-medium text-gray-500">Recommendations Generated</div>
-                    <div className="mt-2 text-2xl font-bold text-gray-800">{overview.recommendations_generated}</div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-md border text-center">
-                    <div className="text-xs font-medium text-gray-500">Clinician Approved</div>
-                    <div className="mt-2 text-2xl font-bold text-blue-600">{overview.recommendations_approved}</div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-md border text-center">
-                    <div className="text-xs font-medium text-gray-500">Appointments Booked</div>
-                    <div className="mt-2 text-2xl font-bold text-indigo-600">{overview.appointments_booked}</div>
-                    <div className="mt-1 text-xs text-gray-500">Attended: {overview.appointments_attended}</div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-md border text-center">
-                    <div className="text-xs font-medium text-gray-500">Referrals Completed</div>
-                    <div className="mt-2 text-2xl font-bold text-purple-600">{overview.referrals_completed}</div>
-                    <div className="mt-1 text-xs text-gray-500">Created: {overview.referrals_created}</div>
-                  </div>
-                  <div className="bg-emerald-50 p-4 rounded-md border border-emerald-200 text-center">
-                    <div className="text-xs font-medium text-emerald-800">Care Gaps Closed (Evidence)</div>
-                    <div className="mt-2 text-2xl font-bold text-emerald-700">{overview.care_gaps_closed}</div>
-                    <div className="mt-1 text-xs text-emerald-600">Module G Verified</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Operational Integrity Notes */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Data Quality & Completeness</h4>
-                  <ul className="text-xs text-gray-600 space-y-2">
-                    <li className="flex justify-between">
-                      <span>Profiles with minimal or incomplete data:</span>
-                      <strong className="text-amber-700">{overview.incomplete_profiles}</strong>
-                    </li>
-                    <li className="flex justify-between">
-                      <span>Patient appointment no-show rate:</span>
-                      <strong>{overview.no_show_rate.toFixed(1)}%</strong>
-                    </li>
-                    <li className="flex justify-between">
-                      <span>Reporting window timeframe:</span>
-                      <span>{overview.reporting_window_days} days</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Audit & Epistemic Verification</h4>
-                  <p className="text-xs text-gray-500 leading-relaxed">
-                    All population health snapshots are strictly audited under DOH Abu Dhabi information governance.
-                    Screening records require verified epistemic status; synthetic, simulated, or hallucinated claims are strictly prohibited by system guardrails.
-                  </p>
-                  <div className="mt-3 text-xs text-gray-400">
-                    Snapshot Timestamp: {new Date(overview.generated_at).toLocaleString()}
-                  </div>
-                </div>
-              </div>
+        {/* Denominator Integrity Mandate Notice */}
+        <div className="p-4 rounded-xl bg-forest-50/70 border border-forest-100 flex items-start gap-3">
+          <Info className="w-4 h-4 text-forest-800 shrink-0 mt-0.5" />
+          <div className="space-y-0.5 text-xs">
+            <div className="font-bold text-forest-900">
+              Mathematical Denominator Integrity Mandate (DoH Abu Dhabi Standard)
             </div>
-          )}
+            <p className="text-forest-800/90 leading-relaxed text-[11px]">
+              To eliminate epidemiological bias, each metric enforces distinct, governed denominators:
+              <strong> Registered Population</strong> (total cohort) &ne; <strong>Eligible Population</strong> (age/condition qualified) &ne; <strong>Completed Screenings</strong> (epistemically verified) &ne; <strong>Closed Care Gaps</strong> (verified evidence-backed resolution).
+            </p>
+          </div>
+        </div>
 
-          {/* TAB 2: PEDIATRIC INTELLIGENCE */}
-          {activeTab === 'pediatric' && pediatric && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Pediatric Cohort (0–17)</div>
-                  <div className="mt-2 text-3xl font-bold text-gray-900">{pediatric.total_pediatric}</div>
-                  <div className="mt-1 text-xs text-gray-500">Eligible for Well-Child: {pediatric.eligible_for_well_child}</div>
-                </div>
+        {/* Notifications */}
+        {error && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 font-medium flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="text-rose-600 text-xs font-bold">✕</button>
+          </div>
+        )}
+        {successMessage && (
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center justify-between">
+            <span>{successMessage}</span>
+            <button onClick={() => setSuccessMessage(null)} className="text-emerald-600 text-xs font-bold">✕</button>
+          </div>
+        )}
 
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Well-Child Visit Coverage</div>
-                  <div className="mt-2 text-3xl font-bold text-emerald-600">{pediatric.well_child_coverage_percentage.toFixed(1)}%</div>
-                  <div className="mt-1 text-xs text-gray-500">Completed visits: {pediatric.completed_well_child}</div>
-                </div>
+        {/* Navigation Tabs */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+          <div className="border-b border-slate-200/80 px-6 pt-3 flex gap-6 overflow-x-auto text-xs font-medium">
+            {[
+              { id: 'overview', name: 'Executive Overview', icon: BarChart3 },
+              { id: 'pediatric', name: 'Pediatric Well-Child', icon: Baby },
+              { id: 'adult', name: 'Adult IFHAS 2026', icon: HeartPulse },
+              { id: 'geographic', name: 'Geographic Privacy Map', icon: MapPin },
+              { id: 'equity', name: 'Equity & ML Fairness', icon: Scale },
+              { id: 'reports', name: 'Governed Reports', icon: FileSpreadsheet },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`pb-3.5 border-b-2 font-semibold flex items-center gap-2 transition whitespace-nowrap ${
+                    isActive
+                      ? 'border-forest-700 text-forest-800'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{tab.name}</span>
+                </button>
+              );
+            })}
+          </div>
 
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Guardian Authorization Rate</div>
-                  <div className="mt-2 text-3xl font-bold text-blue-600">{pediatric.guardian_authorized_rate.toFixed(1)}%</div>
-                  <div className="mt-1 text-xs text-blue-700">UAE Federal Law No. 3 (Wadeema's Law)</div>
-                </div>
-              </div>
-
-              {/* Age-Staged Developmental Milestones */}
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <h3 className="text-base font-semibold text-gray-900 mb-4">Developmental Stage Segmentation</h3>
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-                  {Object.entries(pediatric.developmental_stages || {}).map(([stage, count]) => (
-                    <div key={stage} className="bg-gray-50 p-3 rounded-md border text-center">
-                      <div className="text-xs font-semibold text-gray-600 uppercase">{stage}</div>
-                      <div className="mt-2 text-xl font-bold text-teal-700">{count}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 pt-4 border-t flex justify-between text-xs text-gray-500">
-                  <span>Open Pediatric Care Gaps: <strong>{pediatric.open_pediatric_care_gaps}</strong></span>
-                  <span>Overdue Well-Child Screenings: <strong className="text-amber-700">{pediatric.overdue_well_child}</strong></span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: ADULT IFHAS 2026 */}
-          {activeTab === 'adult' && adult && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Adult Cohort (18–64)</div>
-                  <div className="mt-2 text-3xl font-bold text-gray-900">{adult.total_adult}</div>
-                  <div className="mt-1 text-xs text-gray-500">Eligible for IFHAS: {adult.eligible_for_ifhas}</div>
-                </div>
-
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">IFHAS Comprehensive Coverage</div>
-                  <div className="mt-2 text-3xl font-bold text-emerald-600">{adult.ifhas_coverage_percentage.toFixed(1)}%</div>
-                  <div className="mt-1 text-xs text-gray-500">Completed IFHAS: {adult.completed_ifhas}</div>
-                </div>
-
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Referral Completion Rate</div>
-                  <div className="mt-2 text-3xl font-bold text-purple-600">{adult.referral_completion_rate.toFixed(1)}%</div>
-                  <div className="mt-1 text-xs text-gray-500">Specialist care coordination</div>
-                </div>
-              </div>
-
-              {/* Cardiometabolic Risk Stratification */}
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <h3 className="text-base font-semibold text-gray-900 mb-2">Cardiometabolic Risk Distribution</h3>
-                <p className="text-xs text-gray-500 mb-4">
-                  Stratified according to ADPHC 2026 cardiometabolic guidelines (Blood pressure, Fasting glucose, BMI, Lipid markers).
+          <div className="p-6">
+            {isLoading ? (
+              <div className="py-16 text-center">
+                <LoadingSpinner size="lg" />
+                <p className="mt-3 text-xs font-semibold text-slate-500">
+                  Calculating governed population indicators...
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {Object.entries(adult.cardiometabolic_risk_distribution || {}).map(([risk, count]) => {
-                    const colorClasses =
-                      risk === 'VERY_HIGH'
-                        ? 'border-red-300 bg-red-50 text-red-900'
-                        : risk === 'HIGH'
-                        ? 'border-amber-300 bg-amber-50 text-amber-900'
-                        : risk === 'MODERATE'
-                        ? 'border-yellow-300 bg-yellow-50 text-yellow-900'
-                        : risk === 'LOW'
-                        ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
-                        : 'border-gray-200 bg-gray-50 text-gray-700';
+              </div>
+            ) : (
+              <>
+                {/* TAB 1: EXECUTIVE OVERVIEW */}
+                {activeTab === 'overview' && overview && (
+                  <div className="space-y-6">
+                    {/* Primary KPI Metric Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <MetricCard
+                        label="Total Registered Cohort"
+                        value={overview.total_registered}
+                        unit="citizens"
+                        subtitle={`Ped: ${overview.pediatric_population} | Adult: ${overview.adult_population} | Geri: ${overview.geriatric_population}`}
+                        icon={Users}
+                        variant="forest"
+                      />
+                      <MetricCard
+                        label="Eligible Target Population"
+                        value={overview.eligible_population}
+                        unit="qualified"
+                        subtitle="Age & guideline indicated"
+                        icon={Building2}
+                      />
+                      <MetricCard
+                        label="Screening Coverage"
+                        value={`${overview.screening_coverage_percentage.toFixed(1)}%`}
+                        subtitle={`${overview.completed_screenings} of ${overview.eligible_population} completed`}
+                        trend={overview.screening_coverage_percentage >= 50 ? 'Compliant' : 'Intervention Needed'}
+                        icon={ShieldCheck}
+                        variant="emerald"
+                      />
+                      <MetricCard
+                        label="Confirmed Care Gaps"
+                        value={overview.confirmed_overdue}
+                        unit="overdue"
+                        subtitle={`Potentially overdue: ${overview.potentially_overdue}`}
+                        icon={AlertTriangle}
+                        variant="amber"
+                      />
+                    </div>
 
-                    return (
-                      <div key={risk} className={`p-4 rounded-md border text-center ${colorClasses}`}>
-                        <div className="text-xs font-semibold uppercase tracking-wider">{risk.replace('_', ' ')}</div>
-                        <div className="mt-2 text-2xl font-bold">{count}</div>
+                    {/* Care Navigation & Gap Closure Funnel */}
+                    <div className="bg-[#F8FAF9] p-6 rounded-2xl border border-slate-200/90 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                            Life-Course Care Navigation & Closure Funnel
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Closed-loop tracking from recommendation through appointment, specialist referral, and evidence-backed resolution.
+                          </p>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-                <div className="mt-4 pt-4 border-t flex justify-between text-xs text-gray-500">
-                  <span>Open Adult Care Gaps: <strong>{adult.open_adult_care_gaps}</strong></span>
-                  <span>Overdue IFHAS Screenings: <strong className="text-amber-700">{adult.overdue_ifhas}</strong></span>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* TAB 4: GEOGRAPHIC PRIVACY MAP */}
-          {activeTab === 'geographic' && geographic && (
-            <div className="space-y-6">
-              {/* Small-Cell Privacy Warning */}
-              <div className="rounded-md bg-amber-50 p-4 border border-amber-200">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-semibold text-amber-900">Abu Dhabi Small-Cell Privacy Suppression Active</h3>
-                    <p className="mt-1 text-xs text-amber-800">
-                      In compliance with UAE Health Data Law and ADPHC epidemiological privacy rules, any geographic cell with fewer than{' '}
-                      <strong>{geographic.small_cell_threshold} individuals</strong> is automatically suppressed as <code>SUPPRESSED</code> with rates omitted to eliminate re-identification risks.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Geographic Region Table */}
-              <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Region</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Code</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Registered</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Eligible</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Screened</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Coverage</th>
-                      <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Privacy Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200 text-sm">
-                    {geographic.regions.map((reg) => (
-                      <tr key={reg.region_code} className={reg.is_suppressed ? 'bg-amber-50/30' : ''}>
-                        <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
-                          {reg.region_name_en} <span className="text-xs text-gray-400 font-normal">({reg.region_name_ar})</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-500">{reg.region_code}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-gray-700">
-                          {reg.is_suppressed ? <span className="font-mono text-amber-700">SUPPRESSED</span> : reg.registered_population}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-gray-700">
-                          {reg.is_suppressed ? <span className="font-mono text-amber-700">SUPPRESSED</span> : reg.eligible_population}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-gray-700">
-                          {reg.is_suppressed ? <span className="font-mono text-amber-700">SUPPRESSED</span> : reg.completed_screenings}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right font-semibold">
-                          {reg.is_suppressed || reg.screening_coverage_percentage == null ? (
-                            <span className="text-gray-400 font-normal">N/A</span>
-                          ) : (
-                            <span className="text-emerald-700">{Number(reg.screening_coverage_percentage).toFixed(1)}%</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          {reg.is_suppressed ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
-                              Privacy Protected (&lt;{geographic.small_cell_threshold})
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
-                              Published
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 5: EQUITY & ML FAIRNESS */}
-          {activeTab === 'equity' && equity && (
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-semibold text-gray-900">Population Health Disparity Ratios</h3>
-                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                    Benchmark: <strong>{equity.benchmark_region}</strong>
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {Object.entries(equity.disparity_ratios || {}).map(([region, ratio]) => (
-                    <div key={region} className="bg-gray-50 p-4 rounded-md border">
-                      <div className="text-xs font-semibold text-gray-500 uppercase">{region} vs Benchmark</div>
-                      <div className="mt-2 text-2xl font-bold text-gray-900">{ratio.toFixed(2)}x</div>
-                      <div className="mt-1 text-xs text-gray-500">
-                        {ratio >= 0.8 && ratio <= 1.25 ? (
-                          <span className="text-emerald-600 font-medium">Equitable access threshold met</span>
-                        ) : (
-                          <span className="text-amber-600 font-medium">Potential disparity detected</span>
-                        )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 pt-2">
+                        <div className="bg-white p-4 rounded-xl border border-slate-200/80 text-center">
+                          <span className="text-[11px] font-semibold text-slate-500 uppercase">Recommendations</span>
+                          <div className="text-2xl font-bold text-slate-900 mt-1.5">{overview.recommendations_generated}</div>
+                          <span className="text-[10px] text-slate-400">Total generated</span>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-slate-200/80 text-center">
+                          <span className="text-[11px] font-semibold text-slate-500 uppercase">Clinician Approved</span>
+                          <div className="text-2xl font-bold text-sky-700 mt-1.5">{overview.recommendations_approved}</div>
+                          <span className="text-[10px] text-slate-400">Physician reviewed</span>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-slate-200/80 text-center">
+                          <span className="text-[11px] font-semibold text-slate-500 uppercase">Booked Visits</span>
+                          <div className="text-2xl font-bold text-indigo-700 mt-1.5">{overview.appointments_booked}</div>
+                          <span className="text-[10px] text-slate-400">Attended: {overview.appointments_attended}</span>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-slate-200/80 text-center">
+                          <span className="text-[11px] font-semibold text-slate-500 uppercase">Specialist Referrals</span>
+                          <div className="text-2xl font-bold text-purple-700 mt-1.5">{overview.referrals_completed}</div>
+                          <span className="text-[10px] text-slate-400">Initiated: {overview.referrals_created}</span>
+                        </div>
+                        <div className="bg-forest-900 text-white p-4 rounded-xl border border-forest-800 text-center shadow-xs">
+                          <span className="text-[11px] font-semibold text-emerald-300 uppercase">Gaps Closed (Evidence)</span>
+                          <div className="text-2xl font-bold text-white mt-1.5">{overview.care_gaps_closed}</div>
+                          <span className="text-[10px] text-emerald-200">Module G Verified</span>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* ML Fairness Guardrail Card */}
-              <div className="bg-white p-6 rounded-lg border shadow-sm space-y-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold text-gray-900">Machine Learning Fairness Guardrail</h3>
-                  <span className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded font-medium">Governed</span>
-                </div>
-                <div className="bg-purple-50 p-4 rounded-md border border-purple-200 text-xs text-purple-900 space-y-2">
-                  <p>
-                    <strong>Ground-Truth Label Requirement:</strong> {equity.ml_fairness_evaluation?.ground_truth_status || 'Requires verified clinical observations.'}
-                  </p>
-                  <p>
-                    <strong>Disparate Impact Ratio:</strong> {equity.ml_fairness_evaluation?.disparate_impact_ratio !== undefined ? `${equity.ml_fairness_evaluation.disparate_impact_ratio}` : '1.0 (Calculated against AD_CENTRAL)'}
-                  </p>
-                  <p>
-                    <strong>Demographic Parity Audit:</strong> {equity.ml_fairness_evaluation?.demographic_parity_status || 'Compliant with UAE Ethical AI Guidelines.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+                    {/* Operational Governance & Completeness */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-white p-5 rounded-xl border border-slate-200/90 space-y-3">
+                        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                          Data Quality & Profile Completeness
+                        </h4>
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between py-1 border-b border-slate-100">
+                            <span className="text-slate-600">Incomplete / Minimal Data Profiles:</span>
+                            <span className="font-semibold text-amber-700">{overview.incomplete_profiles}</span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-100">
+                            <span className="text-slate-600">Patient Appointment No-Show Rate:</span>
+                            <span className="font-semibold text-slate-900">{overview.no_show_rate.toFixed(1)}%</span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span className="text-slate-600">Active Reporting Window:</span>
+                            <span className="font-semibold text-slate-900">{overview.reporting_window_days} days</span>
+                          </div>
+                        </div>
+                      </div>
 
-          {/* TAB 6: GOVERNED REPORTS */}
-          {activeTab === 'reports' && (
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-lg border shadow-sm space-y-4">
-                <h3 className="text-base font-semibold text-gray-900">Generate Governed Population Health Report</h3>
-                <p className="text-xs text-gray-500">
-                  Export verifiable, audit-logged population health reports signed under ADPHC reporting standards.
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Report Type</label>
-                    <select
-                      value={reportType}
-                      onChange={(e) => setReportType(e.target.value)}
-                      className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    >
-                      <option value="POPULATION_SUMMARY">Comprehensive Population Health Summary</option>
-                      <option value="PEDIATRIC_COVERAGE">Pediatric Well-Child Surveillance</option>
-                      <option value="ADULT_IFHAS">Adult IFHAS Cardiometabolic Intelligence</option>
-                      <option value="EQUITY_AUDIT">Population Health Equity & Fairness Audit</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-end">
-                    <button
-                      onClick={handleGenerateReport}
-                      disabled={reportLoading}
-                      className="w-full rounded-md bg-teal-600 py-2 px-4 text-sm font-medium text-white hover:bg-teal-700 shadow-sm disabled:opacity-50"
-                    >
-                      {reportLoading ? 'Generating & Auditing...' : 'Generate Governed Report'}
-                    </button>
-                  </div>
-                </div>
-
-                {generatedReport && (
-                  <div className="mt-6 border-t pt-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Report Output Preview</h4>
-                    <pre className="bg-gray-900 text-gray-100 p-4 rounded-md text-xs overflow-x-auto max-h-96">
-                      {JSON.stringify(generatedReport, null, 2)}
-                    </pre>
+                      <div className="bg-white p-5 rounded-xl border border-slate-200/90 space-y-3">
+                        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                          Audit & Epistemic Verification
+                        </h4>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          All population snapshots enforce strict DoH information governance. Synthetic, simulated, or hallucinated claims are blocked by system guardrails.
+                        </p>
+                        <div className="text-[11px] font-mono text-slate-400 pt-1">
+                          Snapshot Timestamp: {new Date(overview.generated_at).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </div>
+
+                {/* TAB 2: PEDIATRIC INTELLIGENCE */}
+                {activeTab === 'pediatric' && pediatric && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <MetricCard
+                        label="Pediatric Population (0–17)"
+                        value={pediatric.total_pediatric}
+                        unit="children"
+                        subtitle={`Eligible for Well-Child: ${pediatric.eligible_for_well_child}`}
+                        icon={Baby}
+                        variant="forest"
+                      />
+                      <MetricCard
+                        label="Well-Child Visit Coverage"
+                        value={`${pediatric.well_child_coverage_percentage.toFixed(1)}%`}
+                        subtitle={`Completed: ${pediatric.completed_well_child} visits`}
+                        icon={ShieldCheck}
+                        variant="emerald"
+                      />
+                      <MetricCard
+                        label="Guardian Authorization"
+                        value={`${pediatric.guardian_authorized_rate.toFixed(1)}%`}
+                        subtitle="Wadeema's Law (Federal Law No. 3)"
+                        icon={Scale}
+                        variant="blue"
+                      />
+                    </div>
+
+                    <div className="bg-[#F8FAF9] p-6 rounded-2xl border border-slate-200/90 space-y-4">
+                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                        Developmental Stage Segmentation
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                        {Object.entries(pediatric.developmental_stages || {}).map(([stage, count]) => (
+                          <div key={stage} className="bg-white p-4 rounded-xl border border-slate-200/80 text-center">
+                            <span className="text-[11px] font-semibold text-slate-500 uppercase">{stage}</span>
+                            <div className="text-2xl font-bold text-forest-800 mt-1">{count}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="pt-3 border-t border-slate-200 flex justify-between text-xs text-slate-600">
+                        <span>Open Pediatric Care Gaps: <strong className="text-slate-900">{pediatric.open_pediatric_care_gaps}</strong></span>
+                        <span>Overdue Well-Child Screenings: <strong className="text-amber-700">{pediatric.overdue_well_child}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: ADULT IFHAS 2026 */}
+                {activeTab === 'adult' && adult && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <MetricCard
+                        label="Adult Population (18–64)"
+                        value={adult.total_adult}
+                        unit="adults"
+                        subtitle={`Eligible for IFHAS: ${adult.eligible_for_ifhas}`}
+                        icon={Users}
+                        variant="forest"
+                      />
+                      <MetricCard
+                        label="IFHAS Screening Coverage"
+                        value={`${adult.ifhas_coverage_percentage.toFixed(1)}%`}
+                        subtitle={`Completed: ${adult.completed_ifhas} screenings`}
+                        icon={HeartPulse}
+                        variant="emerald"
+                      />
+                      <MetricCard
+                        label="Referral Completion Rate"
+                        value={`${adult.referral_completion_rate.toFixed(1)}%`}
+                        subtitle="Specialist lifestyle & nutrition care"
+                        icon={ShieldCheck}
+                        variant="blue"
+                      />
+                    </div>
+
+                    <div className="bg-[#F8FAF9] p-6 rounded-2xl border border-slate-200/90 space-y-4">
+                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                        Cardiometabolic Risk Distribution (ADPHC 2026 Guidelines)
+                      </h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        {Object.entries(adult.cardiometabolic_risk_distribution || {}).map(([risk, count]) => (
+                          <div key={risk} className="bg-white p-4 rounded-xl border border-slate-200/80 text-center">
+                            <span className="text-[11px] font-semibold text-slate-500 uppercase">{risk.replace(/_/g, ' ')}</span>
+                            <div className="text-2xl font-bold text-slate-900 mt-1">{count}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="pt-3 border-t border-slate-200 flex justify-between text-xs text-slate-600">
+                        <span>Open Adult Care Gaps: <strong className="text-slate-900">{adult.open_adult_care_gaps}</strong></span>
+                        <span>Overdue IFHAS Screenings: <strong className="text-amber-700">{adult.overdue_ifhas}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 4: GEOGRAPHIC PRIVACY MAP */}
+                {activeTab === 'geographic' && geographic && (
+                  <div className="space-y-6">
+                    <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1">
+                      <div className="font-bold">Abu Dhabi Small-Cell Privacy Suppression Guardrail Active</div>
+                      <p className="leading-relaxed">
+                        In compliance with UAE Health Data Law and ADPHC rules, any geographic cell with fewer than{' '}
+                        <strong>{geographic.small_cell_threshold} individuals</strong> is automatically marked as{' '}
+                        <code>SUPPRESSED</code> with rates omitted to eliminate re-identification risks.
+                      </p>
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+                      <table className="min-w-full divide-y divide-slate-200 text-xs">
+                        <thead className="bg-[#F8FAF9] text-slate-600 uppercase tracking-wider font-semibold text-[11px]">
+                          <tr>
+                            <th className="px-5 py-3 text-left">Region</th>
+                            <th className="px-5 py-3 text-left">Code</th>
+                            <th className="px-5 py-3 text-right">Registered</th>
+                            <th className="px-5 py-3 text-right">Eligible</th>
+                            <th className="px-5 py-3 text-right">Screened</th>
+                            <th className="px-5 py-3 text-right">Coverage</th>
+                            <th className="px-5 py-3 text-center">Privacy Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {geographic.regions.map((reg) => (
+                            <tr key={reg.region_code} className={reg.is_suppressed ? 'bg-amber-50/20' : 'hover:bg-slate-50/60'}>
+                              <td className="px-5 py-3.5 font-bold text-slate-900">
+                                {reg.region_name_en} <span className="font-normal text-slate-400">({reg.region_name_ar})</span>
+                              </td>
+                              <td className="px-5 py-3.5 font-mono text-slate-500">{reg.region_code}</td>
+                              <td className="px-5 py-3.5 text-right font-medium text-slate-800">
+                                {reg.is_suppressed ? <span className="font-mono text-amber-700">SUPPRESSED</span> : reg.registered_population}
+                              </td>
+                              <td className="px-5 py-3.5 text-right font-medium text-slate-800">
+                                {reg.is_suppressed ? <span className="font-mono text-amber-700">SUPPRESSED</span> : reg.eligible_population}
+                              </td>
+                              <td className="px-5 py-3.5 text-right font-medium text-slate-800">
+                                {reg.is_suppressed ? <span className="font-mono text-amber-700">SUPPRESSED</span> : reg.completed_screenings}
+                              </td>
+                              <td className="px-5 py-3.5 text-right font-bold text-forest-800">
+                                {reg.is_suppressed || reg.screening_coverage_percentage == null
+                                  ? 'N/A'
+                                  : `${Number(reg.screening_coverage_percentage).toFixed(1)}%`}
+                              </td>
+                              <td className="px-5 py-3.5 text-center">
+                                {reg.is_suppressed ? (
+                                  <StatusBadge status="Privacy Protected (<5)" size="sm" />
+                                ) : (
+                                  <StatusBadge status="Published" size="sm" />
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 5: EQUITY & ML FAIRNESS */}
+                {activeTab === 'equity' && equity && (
+                  <div className="space-y-6">
+                    <div className="bg-[#F8FAF9] p-6 rounded-2xl border border-slate-200/90 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                            Population Health Disparity Ratios
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Regional access benchmarked against <strong>{equity.benchmark_region}</strong>.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {Object.entries(equity.disparity_ratios || {}).map(([region, ratio]) => (
+                          <div key={region} className="bg-white p-4 rounded-xl border border-slate-200/80 space-y-1">
+                            <span className="text-[11px] font-semibold text-slate-500 uppercase">{region}</span>
+                            <div className="text-2xl font-bold text-slate-900">{ratio.toFixed(2)}x</div>
+                            <span className={`text-[11px] font-medium ${ratio >= 0.8 && ratio <= 1.25 ? 'text-emerald-700' : 'text-amber-700'}`}>
+                              {ratio >= 0.8 && ratio <= 1.25 ? 'Equitable access threshold met' : 'Disparity alert'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200/90 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-emerald-600" />
+                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                          Machine Learning Fairness Guardrail
+                        </h3>
+                      </div>
+                      <div className="p-4 rounded-xl bg-forest-50/70 border border-forest-100 text-xs text-forest-900 space-y-1.5">
+                        <p>
+                          <strong>Ground-Truth Label Requirement:</strong> {equity.ml_fairness_evaluation?.ground_truth_status || 'Requires verified clinical observations.'}
+                        </p>
+                        <p>
+                          <strong>Disparate Impact Ratio:</strong> {equity.ml_fairness_evaluation?.disparate_impact_ratio !== undefined ? `${equity.ml_fairness_evaluation.disparate_impact_ratio}` : '1.0 (Audited)'}
+                        </p>
+                        <p>
+                          <strong>Demographic Parity Audit:</strong> {equity.ml_fairness_evaluation?.demographic_parity_status || 'Compliant with UAE Ethical AI Guidelines.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 6: GOVERNED REPORTS */}
+                {activeTab === 'reports' && (
+                  <div className="bg-white p-6 rounded-2xl border border-slate-200/90 space-y-6">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                        Generate Governed Population Health Report
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Export verifiable, audit-logged population health reports signed under ADPHC reporting standards.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                          Report Type
+                        </label>
+                        <select
+                          value={reportType}
+                          onChange={(e) => setReportType(e.target.value)}
+                          className="w-full text-xs bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-forest-600"
+                        >
+                          <option value="POPULATION_SUMMARY">Comprehensive Population Health Summary</option>
+                          <option value="PEDIATRIC_COVERAGE">Pediatric Well-Child Surveillance</option>
+                          <option value="ADULT_IFHAS">Adult IFHAS Cardiometabolic Intelligence</option>
+                          <option value="EQUITY_AUDIT">Population Health Equity & Fairness Audit</option>
+                        </select>
+                      </div>
+
+                      <div className="flex items-end">
+                        <button
+                          onClick={handleGenerateReport}
+                          disabled={reportLoading}
+                          className="w-full py-2 px-4 rounded-lg bg-forest-800 hover:bg-forest-900 text-white text-xs font-semibold shadow-xs transition disabled:opacity-50 flex items-center justify-center gap-1.5"
+                        >
+                          {reportLoading ? 'Generating...' : 'Generate Governed Report'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {generatedReport && (
+                      <div className="border-t border-slate-100 pt-4 space-y-2">
+                        <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">Report Output Payload</span>
+                        <pre className="bg-slate-950 text-slate-200 p-4 rounded-xl text-xs overflow-x-auto max-h-96 font-mono">
+                          {JSON.stringify(generatedReport, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </AppShell>
   );
 }
 
 export default function PopulationHealthPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm text-gray-500">Loading Population Health Intelligence...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500">Loading Population Health Intelligence...</div>}>
       <PopulationHealthContent />
     </Suspense>
   );

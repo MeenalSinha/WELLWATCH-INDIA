@@ -5,9 +5,19 @@ import { useRouter } from 'next/navigation';
 import { apiClient, ApiError } from '@/lib/api';
 import { getStoredUser } from '@/lib/auth';
 import { AuditLog, TokenResponse } from '@/types';
+import { AppShell } from '@/components/AppShell';
+import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { EmptyState } from '@/components/EmptyState';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import {
+  ShieldAlert,
+  ShieldCheck,
+  Lock,
+  FileText,
+  Clock,
+  AlertTriangle,
+  Fingerprint,
+} from 'lucide-react';
 
 export default function AuditPage() {
   const router = useRouter();
@@ -29,7 +39,7 @@ export default function AuditPage() {
       .then(setLogs)
       .catch((err) => {
         if (err instanceof ApiError && err.status === 403) {
-          setError('Access Denied: The system audit trail requires DATA_GOVERNANCE_OFFICER permissions.');
+          setError('Access Restricted: The system audit trail requires DATA_GOVERNANCE_OFFICER permissions.');
         } else {
           setError(err.message || 'Failed to load audit logs.');
         }
@@ -37,88 +47,97 @@ export default function AuditPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  if (!user) return <LoadingSpinner size="lg" />;
-
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 tracking-tight">System Audit & Governance Trail</h1>
-        <p className="text-xs text-slate-500 mt-1">
-          Immutable, tamper-evident security and data access event logs (ADHICS & UAE Health Data Law)
-        </p>
-      </div>
+    <AppShell activePage="/audit">
+      <div className="space-y-6">
+        <PageHeader
+          breadcrumbs={['Platform & Governance', 'Audit Logs']}
+          title="System Audit &amp; Governance Trail"
+          subtitle="Immutable, tamper-evident security and data access event logs under ADHICS Tier 3 and UAE Federal Health Data Law."
+        />
 
-      {error ? (
-        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
-          <div className="font-bold flex items-center gap-1.5">
-            <span>⚠️</span> Role Authorization Guard Active
-          </div>
-          <p>{error}</p>
-          <p className="text-slate-600">
-            To inspect the system audit trail, switch your active persona to{' '}
-            <span className="font-semibold">Data Governance Officer</span> from the Sign In page.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-              Recorded Security & Access Events
-            </h2>
-            <span className="text-xs text-slate-500">{logs.length} events logged</span>
-          </div>
-
-          <div className="p-2.5 rounded bg-slate-50 border border-slate-200 text-[11px] text-slate-600">
-            🔒 <strong>Zero PHI Invariance:</strong> Audit entries strictly log entity identifiers, actions, and
-            outcomes. Protected Health Information, clinical observations, and passwords are cryptographically
-            excluded from audit storage.
-          </div>
-
-          {loading ? (
-            <LoadingSpinner />
-          ) : logs.length === 0 ? (
-            <EmptyState
-              title="No Audit Logs Recorded"
-              description="System transactions and access attempts will automatically populate this ledger."
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-600">
-                <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
-                  <tr>
-                    <th className="py-3 px-4">Timestamp</th>
-                    <th className="py-3 px-4">Action</th>
-                    <th className="py-3 px-4">Resource</th>
-                    <th className="py-3 px-4">Outcome</th>
-                    <th className="py-3 px-4">Correlation ID</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
-                  {logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-50 transition">
-                      <td className="py-2.5 px-4 text-slate-500">
-                        {new Date(log.created_at).toLocaleString()}
-                      </td>
-                      <td className="py-2.5 px-4 font-semibold text-slate-900">
-                        {log.action}
-                      </td>
-                      <td className="py-2.5 px-4 text-slate-600">
-                        {log.resource_type} {log.resource_id ? `(${log.resource_id.substring(0, 8)}...)` : ''}
-                      </td>
-                      <td className="py-2.5 px-4">
-                        <StatusBadge status={log.outcome} />
-                      </td>
-                      <td className="py-2.5 px-4 text-slate-400">
-                        {log.correlation_id.substring(0, 13)}...
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {error ? (
+          <div className="card-healthcare p-6 border-l-4 border-l-amber-500 bg-amber-50/40 space-y-2">
+            <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <span>Role Authorization Guard Active</span>
             </div>
-          )}
-        </div>
-      )}
-    </div>
+            <p className="text-xs text-amber-800 leading-relaxed">{error}</p>
+            <p className="text-xs text-slate-600 pt-2 border-t border-amber-200">
+              To inspect the cryptographic audit trail, switch your active persona to{' '}
+              <strong className="text-slate-900">Data Governance Officer</strong> via the Sign In persona picker.
+            </p>
+          </div>
+        ) : (
+          <div className="card-healthcare overflow-hidden space-y-4">
+            <div className="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <Fingerprint className="w-4 h-4 text-forest-700" />
+                  Recorded Security &amp; Access Events ({logs.length})
+                </h2>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Append-only immutable event stream with correlation IDs
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest-50 border border-forest-200 text-[11px] text-forest-900 font-semibold">
+                <Lock className="w-3.5 h-3.5 text-forest-700" />
+                <span>Zero PHI Invariance Enforced</span>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="p-12 text-center text-slate-400">
+                <div className="w-6 h-6 border-2 border-forest-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <span>Verifying security logs and audit signatures...</span>
+              </div>
+            ) : logs.length === 0 ? (
+              <div className="p-8">
+                <EmptyState
+                  title="No Audit Logs Recorded"
+                  description="System transactions, screening events, and access attempts will automatically populate this ledger."
+                />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="table-healthcare text-xs">
+                  <thead>
+                    <tr>
+                      <th>Event Timestamp</th>
+                      <th>Action</th>
+                      <th>Resource Type &amp; ID</th>
+                      <th>Outcome</th>
+                      <th>Correlation ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {logs.map((log) => (
+                      <tr key={log.id}>
+                        <td className="font-mono text-slate-600 whitespace-nowrap">
+                          {new Date(log.created_at).toLocaleString()}
+                        </td>
+                        <td className="font-semibold text-slate-900">
+                          {log.action}
+                        </td>
+                        <td className="text-slate-600 font-mono text-[11px]">
+                          {log.resource_type}{' '}
+                          {log.resource_id ? `(${log.resource_id.substring(0, 8)}...)` : ''}
+                        </td>
+                        <td>
+                          <StatusBadge status={log.outcome} />
+                        </td>
+                        <td className="font-mono text-slate-400 text-[11px]">
+                          {log.correlation_id.substring(0, 13)}...
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </AppShell>
   );
 }

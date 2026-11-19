@@ -11,6 +11,26 @@ import {
   RecommendationExplanation,
   PersonSummary,
 } from '@/types';
+import { AppShell } from '@/components/AppShell';
+import { PageHeader } from '@/components/PageHeader';
+import { StatusBadge } from '@/components/StatusBadge';
+import { MetricCard } from '@/components/MetricCard';
+import { EmptyState } from '@/components/EmptyState';
+import {
+  Sparkles,
+  ShieldCheck,
+  CheckCircle2,
+  Clock,
+  Filter,
+  Info,
+  Calendar,
+  AlertTriangle,
+  UserCheck,
+  Zap,
+  X,
+  FileText,
+  AlertCircle,
+} from 'lucide-react';
 
 function RecommendationsContent() {
   const searchParams = useSearchParams();
@@ -65,7 +85,7 @@ function RecommendationsContent() {
         patientId || undefined,
         filterStatus || undefined,
         filterPriority || undefined,
-        50,
+        100,
         0
       );
       setRecommendations(res.items);
@@ -78,14 +98,13 @@ function RecommendationsContent() {
 
   async function handleGenerate() {
     if (!patientId) {
-      alert('Please select a patient first.');
+      alert('Please select a resident record first.');
       return;
     }
     setIsGenerating(true);
     setError(null);
     try {
       const newRecs = await apiClient.generateRecommendations(patientId);
-      alert(`Generated ${newRecs.length} evidence-backed recommendations.`);
       loadRecommendations();
     } catch (err: any) {
       setError(err instanceof ApiError ? err.message : 'Failed to generate recommendations');
@@ -143,351 +162,465 @@ function RecommendationsContent() {
     }
   }
 
+  // Metric counts
+  const criticalCount = recommendations.filter((r) => r.priority === 'CRITICAL').length;
+  const pendingCount = recommendations.filter((r) => r.lifecycle_status === 'PENDING_CLINICAL_REVIEW').length;
+  const approvedCount = recommendations.filter((r) => r.lifecycle_status === 'APPROVED' || r.lifecycle_status === 'COMPLETED').length;
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Personalized Preventive Recommendations</h1>
-          <p className="text-sm text-slate-600 mt-1">
-            Abu Dhabi Public Health Center (ADPHC) & DoH Evidence-Backed Clinical Guidance Engine
-          </p>
+    <AppShell activePage="/recommendations">
+      <div className="space-y-6">
+        <PageHeader
+          breadcrumbs={['Intelligence', 'Preventive Guidance']}
+          title="Personalized Preventive Recommendations"
+          subtitle="Abu Dhabi Public Health Center (ADPHC) &amp; DoH Evidence-Backed Clinical Guidance Engine."
+          action={
+            patientId
+              ? {
+                  label: isGenerating ? 'Generating...' : 'Synthesize Recommendations',
+                  icon: Zap,
+                  onClick: handleGenerate,
+                }
+              : undefined
+          }
+        />
+
+        {/* Metric Cards Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <MetricCard
+            title="Total Active Orders"
+            value={recommendations.length}
+            icon={Sparkles}
+            subtitle="Filtered recommendations"
+            variant="forest"
+          />
+          <MetricCard
+            title="Critical Priority"
+            value={criticalCount}
+            icon={AlertTriangle}
+            subtitle="Immediate clinical risk"
+            variant="amber"
+          />
+          <MetricCard
+            title="Awaiting MD Review"
+            value={pendingCount}
+            icon={Clock}
+            subtitle="Clinical sign-off needed"
+            variant="teal"
+          />
+          <MetricCard
+            title="Clinically Approved"
+            value={approvedCount}
+            icon={CheckCircle2}
+            subtitle="Certified preventive pathways"
+            variant="emerald"
+          />
         </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={patientId}
-            onChange={(e) => setPatientId(e.target.value)}
-            className="rounded-lg border-slate-300 text-sm py-2 px-3 focus:ring-emerald-500 focus:border-emerald-500"
-          >
-            <option value="">-- All Patients --</option>
-            {patients.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.full_name} ({p.population_classification})
-              </option>
-            ))}
-          </select>
-          {patientId && (
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm disabled:opacity-50"
+
+        {/* Filters and Patient Selector */}
+        <div className="card-healthcare p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex-shrink-0">
+              Resident:
+            </span>
+            <select
+              value={patientId}
+              onChange={(e) => setPatientId(e.target.value)}
+              className="px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white font-medium focus:ring-2 focus:ring-forest-600 focus:outline-none w-full md:w-80"
             >
-              {isGenerating ? 'Evaluating...' : '⚡ Generate Recommendations'}
-            </button>
+              <option value="">-- All Enrolled Residents --</option>
+              {patients.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.full_name} ({p.population_classification} &bull; {p.age_years} yrs)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Priority:
+              </span>
+              <select
+                value={filterPriority}
+                onChange={(e) => setFilterPriority(e.target.value)}
+                className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white font-medium focus:ring-2 focus:ring-forest-600 focus:outline-none"
+              >
+                <option value="">All Priorities</option>
+                <option value="CRITICAL">Critical</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="ROUTINE">Routine</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Lifecycle:
+              </span>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white font-medium focus:ring-2 focus:ring-forest-600 focus:outline-none"
+              >
+                <option value="">All Lifecycle States</option>
+                <option value="PENDING_CLINICAL_REVIEW">Pending Review</option>
+                <option value="APPROVED">Clinically Approved</option>
+                <option value="OFFERED">Offered</option>
+                <option value="ACCEPTED">Accepted</option>
+                <option value="DECLINED">Declined</option>
+                <option value="SCHEDULED">Scheduled</option>
+                <option value="COMPLETED">Completed</option>
+              </select>
+            </div>
+
+            {(filterPriority || filterStatus || patientId) && (
+              <button
+                onClick={() => {
+                  setFilterPriority('');
+                  setFilterStatus('');
+                  setPatientId('');
+                }}
+                className="text-xs text-forest-700 hover:text-forest-900 font-semibold underline ml-1"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
+
+        {error && (
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Main Recommendations Table */}
+        <div className="card-healthcare overflow-hidden">
+          {isLoading ? (
+            <div className="p-12 text-center text-slate-400">
+              <div className="w-6 h-6 border-2 border-forest-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <span>Loading evidence-backed recommendations...</span>
+            </div>
+          ) : recommendations.length === 0 ? (
+            <div className="p-8">
+              <EmptyState
+                title="No Preventive Guidance Found"
+                description={
+                  patientId
+                    ? 'No recommendations currently recorded for this resident. Click "Synthesize Recommendations" above to run the ADPHC guidance engine.'
+                    : 'Select a resident to generate or review personalized clinical recommendations.'
+                }
+                action={
+                  patientId
+                    ? {
+                        label: 'Synthesize Guidance Now',
+                        onClick: handleGenerate,
+                      }
+                    : undefined
+                }
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="table-healthcare text-xs">
+                <thead>
+                  <tr>
+                    <th>Category &amp; Rule</th>
+                    <th>Recommended Clinical Action</th>
+                    <th>Priority</th>
+                    <th>Lifecycle State</th>
+                    <th>Target Window</th>
+                    <th className="text-right">Physician Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recommendations.map((rec) => (
+                    <tr key={rec.id}>
+                      <td>
+                        <span className="font-semibold text-slate-900 block">
+                          {rec.category.replace(/_/g, ' ')}
+                        </span>
+                        <span className="font-mono text-[11px] text-slate-400">
+                          {rec.rule_id}
+                        </span>
+                      </td>
+                      <td className="max-w-md">
+                        <p className="font-semibold text-slate-900">{rec.recommended_action}</p>
+                        <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                          {rec.clinical_rationale}
+                        </p>
+                      </td>
+                      <td>
+                        <StatusBadge status={rec.priority} />
+                      </td>
+                      <td>
+                        <StatusBadge status={rec.lifecycle_status} />
+                      </td>
+                      <td className="font-mono text-slate-600">
+                        {rec.target_date
+                          ? new Date(rec.target_date).toLocaleDateString()
+                          : 'Immediate'}
+                      </td>
+                      <td className="text-right space-x-2 whitespace-nowrap">
+                        <button
+                          onClick={() => handleViewExplanation(rec)}
+                          className="px-2.5 py-1 text-xs font-semibold rounded bg-forest-50 text-forest-800 hover:bg-forest-100 border border-forest-200 transition"
+                        >
+                          Explain
+                        </button>
+                        {rec.lifecycle_status === 'PENDING_CLINICAL_REVIEW' && (
+                          <button
+                            onClick={() => {
+                              setSelectedRec(rec);
+                              setShowReviewModal(true);
+                            }}
+                            className="px-2.5 py-1 text-xs font-semibold rounded bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200 transition"
+                          >
+                            Review
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            setSelectedRec(rec);
+                            setTargetStatus('OFFERED');
+                            setShowStatusModal(true);
+                          }}
+                          className="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition"
+                        >
+                          Status
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
-      </div>
 
-      {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm">
-        <span className="font-medium text-slate-700">Filters:</span>
-        <select
-          value={filterPriority}
-          onChange={(e) => setFilterPriority(e.target.value)}
-          className="rounded-md border-slate-300 text-xs py-1.5 px-2.5"
-        >
-          <option value="">All Priorities</option>
-          <option value="CRITICAL">Critical</option>
-          <option value="HIGH">High</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="ROUTINE">Routine</option>
-        </select>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="rounded-md border-slate-300 text-xs py-1.5 px-2.5"
-        >
-          <option value="">All Lifecycle States</option>
-          <option value="PENDING_CLINICAL_REVIEW">Pending Review</option>
-          <option value="APPROVED">Clinically Approved</option>
-          <option value="OFFERED">Offered</option>
-          <option value="ACCEPTED">Accepted</option>
-          <option value="DECLINED">Declined</option>
-          <option value="SCHEDULED">Scheduled</option>
-          <option value="COMPLETED">Completed</option>
-        </select>
-        {(filterPriority || filterStatus || patientId) && (
-          <button
-            onClick={() => {
-              setFilterPriority('');
-              setFilterStatus('');
-              setPatientId('');
-            }}
-            className="text-xs text-slate-500 hover:text-slate-800 underline"
-          >
-            Clear Filters
-          </button>
-        )}
-      </div>
-
-      {error && (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm">
-          {error}
-        </div>
-      )}
-
-      {/* Main Table */}
-      {isLoading ? (
-        <div className="text-center py-12 text-slate-500">Loading recommendations from database...</div>
-      ) : recommendations.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl border border-slate-200 text-slate-500">
-          No preventive recommendations found matching criteria. Select a patient and click "Generate Recommendations".
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-slate-600 font-medium">
-              <tr>
-                <th className="px-6 py-3 text-left">Category</th>
-                <th className="px-6 py-3 text-left">Recommended Action</th>
-                <th className="px-6 py-3 text-left">Priority</th>
-                <th className="px-6 py-3 text-left">Status</th>
-                <th className="px-6 py-3 text-left">Target Window</th>
-                <th className="px-6 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {recommendations.map((rec) => (
-                <tr key={rec.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-6 py-4 font-medium text-slate-800">
-                    {rec.category.replace(/_/g, ' ')}
-                    <span className="block text-xs font-mono text-slate-400 mt-0.5">{rec.rule_id}</span>
-                  </td>
-                  <td className="px-6 py-4 text-slate-700 max-w-md">
-                    <p className="font-medium text-slate-900">{rec.recommended_action}</p>
-                    <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{rec.clinical_rationale}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${
-                        rec.priority === 'CRITICAL'
-                          ? 'bg-rose-100 text-rose-800'
-                          : rec.priority === 'HIGH'
-                          ? 'bg-amber-100 text-amber-800'
-                          : rec.priority === 'MEDIUM'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-slate-100 text-slate-800'
-                      }`}
-                    >
-                      {rec.priority}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
-                        rec.lifecycle_status === 'COMPLETED'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : rec.lifecycle_status === 'DECLINED'
-                          ? 'bg-rose-100 text-rose-800'
-                          : rec.lifecycle_status === 'SCHEDULED'
-                          ? 'bg-indigo-100 text-indigo-800'
-                          : rec.lifecycle_status === 'APPROVED'
-                          ? 'bg-teal-100 text-teal-800'
-                          : 'bg-amber-50 text-amber-800 border border-amber-200'
-                      }`}
-                    >
-                      {rec.lifecycle_status.replace(/_/g, ' ')}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-xs text-slate-500">
-                    {rec.target_date ? new Date(rec.target_date).toLocaleDateString() : 'Immediate'}
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <button
-                      onClick={() => handleViewExplanation(rec)}
-                      className="text-xs font-medium text-emerald-600 hover:text-emerald-800"
-                    >
-                      Explain
-                    </button>
-                    {rec.lifecycle_status === 'PENDING_CLINICAL_REVIEW' && (
-                      <button
-                        onClick={() => {
-                          setSelectedRec(rec);
-                          setShowReviewModal(true);
-                        }}
-                        className="text-xs font-semibold text-blue-600 hover:text-blue-800"
-                      >
-                        Review
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        setSelectedRec(rec);
-                        setTargetStatus('OFFERED');
-                        setShowStatusModal(true);
-                      }}
-                      className="text-xs font-medium text-slate-600 hover:text-slate-800"
-                    >
-                      Status
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Explanation Modal */}
-      {explanation && selectedRec && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-xl">
-            <div className="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Recommendation Explanation</h3>
-                <p className="text-xs text-slate-500">Governed Rule ID: {explanation.trigger_rule_id}</p>
-              </div>
-              <button
-                onClick={() => setExplanation(null)}
-                className="text-slate-400 hover:text-slate-600 text-lg"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="font-semibold text-slate-700">Source Standard:</span>
-                <p className="text-slate-900">{explanation.source_guideline}</p>
-              </div>
-              <div>
-                <span className="font-semibold text-slate-700">Clinical Rationale:</span>
-                <p className="text-slate-900">{explanation.clinical_rationale}</p>
-              </div>
-              <div>
-                <span className="font-semibold text-slate-700">Identified Care Gap:</span>
-                <p className="text-slate-900 font-mono text-xs">{explanation.trigger_care_gap || 'None'}</p>
-              </div>
-              <div>
-                <span className="font-semibold text-slate-700">Clinical Uncertainty State:</span>
-                <p className="text-slate-900 font-mono text-xs">{explanation.uncertainty_status}</p>
-              </div>
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                <span className="font-semibold text-slate-700 text-xs">Evidence Summary:</span>
-                <pre className="text-xs text-slate-700 mt-1 whitespace-pre-wrap">
-                  {JSON.stringify(explanation.identified_evidence, null, 2)}
-                </pre>
-              </div>
-            </div>
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={() => setExplanation(null)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-medium"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Review Modal */}
-      {showReviewModal && selectedRec && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-900">Licensed Physician Clinical Review</h3>
-            <p className="text-xs text-slate-500">
-              Human oversight attestation for recommendation: {selectedRec.recommended_action}
-            </p>
-            <div className="space-y-3 text-sm">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Decision</label>
-                <select
-                  value={reviewDecision}
-                  onChange={(e) => setReviewDecision(e.target.value)}
-                  className="w-full rounded-lg border-slate-300 text-sm"
-                >
-                  <option value="APPROVED">Approve (Certified for Patient Care)</option>
-                  <option value="MODIFIED">Modify Action</option>
-                  <option value="REJECTED">Reject / Cancel</option>
-                  <option value="INFO_REQUESTED">Request Additional Clinical Data</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Clinical Rationale Notes</label>
-                <textarea
-                  value={reviewRationale}
-                  onChange={(e) => setReviewRationale(e.target.value)}
-                  placeholder="Enter medical justification and doctor notes..."
-                  className="w-full rounded-lg border-slate-300 text-sm h-24"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => setShowReviewModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitReview}
-                disabled={isSubmittingReview}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
-              >
-                {isSubmittingReview ? 'Submitting...' : 'Sign & Submit Review'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Status Update / Decline Modal */}
-      {showStatusModal && selectedRec && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-900">Update Recommendation Lifecycle</h3>
-            <div className="space-y-3 text-sm">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Target Status</label>
-                <select
-                  value={targetStatus}
-                  onChange={(e) => setTargetStatus(e.target.value)}
-                  className="w-full rounded-lg border-slate-300 text-sm"
-                >
-                  <option value="OFFERED">OFFERED (Communicated to patient)</option>
-                  <option value="ACCEPTED">ACCEPTED (Patient agreed)</option>
-                  <option value="DECLINED">DECLINED (Patient declined)</option>
-                  <option value="CANCELLED">CANCELLED</option>
-                </select>
-              </div>
-              {targetStatus === 'DECLINED' && (
+        {/* Explanation Modal */}
+        {explanation && selectedRec && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+              <div className="flex justify-between items-start border-b border-slate-200 pb-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Documented Reason for Declining <span className="text-rose-500">*</span>
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
+                    <Info className="w-4 h-4 text-forest-700" />
+                    Clinical Evidence &amp; Explanation Trace
+                  </h3>
+                  <p className="text-xs text-slate-500 font-mono">
+                    Governed Rule ID: {explanation.trigger_rule_id}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setExplanation(null)}
+                  className="p-1 rounded text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <span className="font-semibold text-slate-700 uppercase tracking-wider text-[11px] block">
+                    Authoritative Standard:
+                  </span>
+                  <p className="text-slate-900 font-medium mt-0.5">{explanation.source_guideline}</p>
+                </div>
+
+                <div>
+                  <span className="font-semibold text-slate-700 uppercase tracking-wider text-[11px] block">
+                    Clinical Rationale:
+                  </span>
+                  <p className="text-slate-800 leading-relaxed mt-0.5">
+                    {explanation.clinical_rationale}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="font-semibold text-slate-700 uppercase tracking-wider text-[11px] block">
+                      Triggered Care Gap:
+                    </span>
+                    <p className="font-mono text-slate-800 bg-slate-50 p-2 rounded border border-slate-200 mt-0.5">
+                      {explanation.trigger_care_gap || 'None'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-700 uppercase tracking-wider text-[11px] block">
+                      Uncertainty State:
+                    </span>
+                    <p className="font-mono text-slate-800 bg-slate-50 p-2 rounded border border-slate-200 mt-0.5">
+                      {explanation.uncertainty_status}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                  <span className="font-semibold text-slate-700 uppercase tracking-wider text-[11px] block">
+                    Evidence Summary Payload:
+                  </span>
+                  <pre className="text-[11px] text-slate-700 mt-1 whitespace-pre-wrap font-mono overflow-x-auto max-h-40">
+                    {JSON.stringify(explanation.identified_evidence, null, 2)}
+                  </pre>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={() => setExplanation(null)}
+                  className="btn-healthcare-secondary text-xs px-4 py-2"
+                >
+                  Close Trace
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Review Modal */}
+        {showReviewModal && selectedRec && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+              <div className="border-b border-slate-200 pb-3">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4 text-forest-700" />
+                  Licensed Physician Clinical Review
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Human oversight sign-off for: <span className="font-medium text-slate-800">{selectedRec.recommended_action}</span>
+                </p>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Physician Attestation Decision *
+                  </label>
+                  <select
+                    value={reviewDecision}
+                    onChange={(e) => setReviewDecision(e.target.value)}
+                    className="w-full rounded-lg border-slate-300 text-xs px-3 py-2 bg-white font-medium focus:ring-2 focus:ring-forest-600 focus:outline-none"
+                  >
+                    <option value="APPROVED">Approve (Certified for Resident Care)</option>
+                    <option value="MODIFIED">Modify Action</option>
+                    <option value="REJECTED">Reject / Cancel Order</option>
+                    <option value="INFO_REQUESTED">Request Additional Diagnostic Telemetry</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Mandatory Clinical Rationale Notes *
                   </label>
                   <textarea
-                    value={declinedReason}
-                    onChange={(e) => setDeclinedReason(e.target.value)}
-                    placeholder="Enter reason provided by patient/guardian..."
-                    className="w-full rounded-lg border-slate-300 text-sm h-20"
+                    required
+                    rows={3}
+                    value={reviewRationale}
+                    onChange={(e) => setReviewRationale(e.target.value)}
+                    placeholder="Document medical justification, patient discussion, or modified orders..."
+                    className="w-full rounded-lg border-slate-300 text-xs p-3 focus:ring-2 focus:ring-forest-600 focus:outline-none"
                   />
                 </div>
-              )}
-            </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => setShowStatusModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitStatusUpdate}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium"
-              >
-                Update Status
-              </button>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                <button
+                  onClick={() => setShowReviewModal(false)}
+                  className="btn-healthcare-secondary text-xs px-4 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitReview}
+                  disabled={isSubmittingReview}
+                  className="btn-healthcare-primary text-xs px-4 py-2 disabled:opacity-50"
+                >
+                  {isSubmittingReview ? 'Submitting...' : 'Sign & Submit Review'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {/* Status Update Modal */}
+        {showStatusModal && selectedRec && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+              <div className="border-b border-slate-200 pb-3">
+                <h3 className="text-base font-bold text-slate-900">Update Recommendation Lifecycle</h3>
+                <p className="text-xs text-slate-500 mt-0.5 font-mono text-[11px]">
+                  Order: {selectedRec.recommended_action}
+                </p>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Target Status *</label>
+                  <select
+                    value={targetStatus}
+                    onChange={(e) => setTargetStatus(e.target.value)}
+                    className="w-full rounded-lg border-slate-300 text-xs px-3 py-2 bg-white font-medium focus:ring-2 focus:ring-forest-600 focus:outline-none"
+                  >
+                    <option value="OFFERED">OFFERED (Communicated to resident)</option>
+                    <option value="ACCEPTED">ACCEPTED (Resident agreed to pathway)</option>
+                    <option value="DECLINED">DECLINED (Resident / guardian declined)</option>
+                    <option value="CANCELLED">CANCELLED (Superseded)</option>
+                  </select>
+                </div>
+
+                {targetStatus === 'DECLINED' && (
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Documented Reason for Declining *
+                    </label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={declinedReason}
+                      onChange={(e) => setDeclinedReason(e.target.value)}
+                      placeholder="Enter specific reasons provided by resident or legal guardian..."
+                      className="w-full rounded-lg border-slate-300 text-xs p-3 focus:ring-2 focus:ring-forest-600 focus:outline-none"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                <button
+                  onClick={() => setShowStatusModal(false)}
+                  className="btn-healthcare-secondary text-xs px-4 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitStatusUpdate}
+                  className="btn-healthcare-primary text-xs px-4 py-2"
+                >
+                  Update Lifecycle Status
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </AppShell>
   );
 }
 
 export default function RecommendationsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-500">Loading Recommendations...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-12 text-center text-slate-400">
+          <div className="w-6 h-6 border-2 border-forest-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <span>Loading recommendations...</span>
+        </div>
+      }
+    >
       <RecommendationsContent />
     </Suspense>
   );

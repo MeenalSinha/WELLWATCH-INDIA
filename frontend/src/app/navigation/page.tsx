@@ -10,6 +10,25 @@ import {
   PersonSummary,
   PreventiveRecommendationResponse,
 } from '@/types';
+import { AppShell } from '@/components/AppShell';
+import { PageHeader } from '@/components/PageHeader';
+import { MetricCard } from '@/components/MetricCard';
+import { StatusBadge } from '@/components/StatusBadge';
+import { EmptyState } from '@/components/EmptyState';
+import {
+  Calendar,
+  Building2,
+  Clock,
+  ShieldCheck,
+  CheckCircle2,
+  Plus,
+  AlertCircle,
+  FileCheck,
+  X,
+  UserCheck,
+  ArrowRight,
+  Activity,
+} from 'lucide-react';
 
 function NavigationContent() {
   const [activeTab, setActiveTab] = useState<'appointments' | 'referrals' | 'followups' | 'closure'>('appointments');
@@ -36,8 +55,7 @@ function NavigationContent() {
   const [specialty, setSpecialty] = useState('Preventive Cardiology');
   const [clinicalIndication, setClinicalIndication] = useState('');
 
-  // Care Gap Closure Modal (Module G)
-  const [showClosureModal, setShowClosureModal] = useState(false);
+  // Care Gap Closure Form
   const [closureGapId, setClosureGapId] = useState('GAP-IFHAS-COMPREHENSIVE');
   const [evidenceSource, setEvidenceSource] = useState('SCREENING_RECORD');
   const [evidenceId, setEvidenceId] = useState('');
@@ -196,7 +214,6 @@ function NavigationContent() {
         verification_notes: closureNotes || 'Verified by attending clinical provider.',
       });
       alert('Care gap successfully closed with clinical verification evidence.');
-      setShowClosureModal(false);
       setEvidenceId('');
       setClosureNotes('');
       const anRes = await apiClient.getNavigationAnalytics();
@@ -208,488 +225,544 @@ function NavigationContent() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Care Navigation & Closed-Loop Follow-Up</h1>
-          <p className="text-sm text-slate-600 mt-1">
-            Abu Dhabi Healthcare Delivery: Coordinating appointments, referrals, follow-ups, and evidence-backed care gap closure
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={selectedPatientId}
-            onChange={(e) => setSelectedPatientId(e.target.value)}
-            className="rounded-lg border-slate-300 text-sm py-2 px-3"
-          >
-            <option value="">-- All Patients --</option>
-            {patients.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.full_name} ({p.population_classification})
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+    <AppShell activePage="/navigation">
+      <div className="space-y-6">
+        <PageHeader
+          breadcrumbs={['Care Operations', 'Navigation & Closures']}
+          title="Care Navigation &amp; Closed-Loop Follow-Up"
+          subtitle="Abu Dhabi Healthcare Delivery: Coordinating appointments, specialist referrals, automated recall follow-ups, and evidence-backed care gap closure."
+        />
 
-      {error && (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
-      {/* Analytics Cards */}
-      {analytics && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Total Appointments</span>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{analytics.total_appointments}</p>
+        {/* Analytics Row */}
+        {analytics && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <MetricCard
+              title="Appointments Booked"
+              value={analytics.total_appointments}
+              icon={Calendar}
+              subtitle="Scheduled encounters"
+              variant="forest"
+            />
+            <MetricCard
+              title="Attendance Rate"
+              value={`${analytics.attendance_rate}%`}
+              icon={CheckCircle2}
+              subtitle="Show rate compliance"
+              variant="emerald"
+            />
+            <MetricCard
+              title="Active Follow-Ups"
+              value={analytics.active_follow_up_tasks}
+              icon={Clock}
+              subtitle="Missed-care recalls"
+              variant="amber"
+            />
+            <MetricCard
+              title="Verified Gaps Closed"
+              value={analytics.closed_care_gaps_count}
+              icon={ShieldCheck}
+              subtitle="Evidence-backed Module G"
+              variant="teal"
+            />
           </div>
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Attendance Rate</span>
-            <p className="text-2xl font-bold text-emerald-600 mt-1">{analytics.attendance_rate}%</p>
-          </div>
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Active Follow-up Tasks</span>
-            <p className="text-2xl font-bold text-amber-600 mt-1">{analytics.active_follow_up_tasks}</p>
-          </div>
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Verified Care Gaps Closed</span>
-            <p className="text-2xl font-bold text-blue-600 mt-1">{analytics.closed_care_gaps_count}</p>
-          </div>
-        </div>
-      )}
+        )}
 
-      {/* Tab Navigation */}
-      <div className="flex border-b border-slate-200 space-x-6 text-sm">
-        <button
-          onClick={() => setActiveTab('appointments')}
-          className={`pb-3 font-semibold border-b-2 transition-colors ${
-            activeTab === 'appointments' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          📅 Appointments ({appointments.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('referrals')}
-          className={`pb-3 font-semibold border-b-2 transition-colors ${
-            activeTab === 'referrals' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          🏥 Specialist Referrals ({referrals.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('followups')}
-          className={`pb-3 font-semibold border-b-2 transition-colors ${
-            activeTab === 'followups' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          🔄 Automated Follow-Up Tasks ({followUps.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('closure')}
-          className={`pb-3 font-semibold border-b-2 transition-colors ${
-            activeTab === 'closure' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          🛡️ Verified Care-Gap Closure (Module G)
-        </button>
-      </div>
-
-      {/* Tab 1: Appointments */}
-      {activeTab === 'appointments' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-base font-bold text-slate-900">Coordinated Preventive Appointments</h3>
-            <button
-              onClick={() => setShowBookModal(true)}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium"
+        {/* Resident Target Bar */}
+        <div className="card-healthcare p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex-shrink-0">
+              Resident Target:
+            </span>
+            <select
+              value={selectedPatientId}
+              onChange={(e) => setSelectedPatientId(e.target.value)}
+              className="px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white font-medium focus:ring-2 focus:ring-forest-600 focus:outline-none w-full sm:w-96"
             >
-              + Book Preventive Appointment
-            </button>
+              <option value="">-- All Enrolled Residents --</option>
+              {patients.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.full_name} ({p.population_classification} &bull; {p.age_years} yrs)
+                </option>
+              ))}
+            </select>
           </div>
-          {appointments.length === 0 ? (
-            <div className="text-center py-8 text-slate-500 text-sm">No appointments scheduled.</div>
-          ) : (
-            <table className="min-w-full divide-y divide-slate-200 text-xs">
-              <thead className="bg-slate-50 text-slate-600 font-medium">
-                <tr>
-                  <th className="px-4 py-2.5 text-left">Service Type</th>
-                  <th className="px-4 py-2.5 text-left">Scheduled Time</th>
-                  <th className="px-4 py-2.5 text-left">Location</th>
-                  <th className="px-4 py-2.5 text-left">Status</th>
-                  <th className="px-4 py-2.5 text-right">Attendance Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {appointments.map((a) => (
-                  <tr key={a.id} className="hover:bg-slate-50/60">
-                    <td className="px-4 py-3 font-semibold text-slate-800">{a.service_type}</td>
-                    <td className="px-4 py-3 text-slate-600">{new Date(a.scheduled_time).toLocaleString()}</td>
-                    <td className="px-4 py-3 text-slate-500">{a.location}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex px-2 py-0.5 rounded-full font-medium ${
-                          a.status === 'ATTENDED' || a.status === 'COMPLETED'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : a.status === 'NO_SHOW'
-                            ? 'bg-rose-100 text-rose-800'
-                            : 'bg-indigo-100 text-indigo-800'
-                        }`}
-                      >
-                        {a.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right space-x-2">
-                      {a.status === 'BOOKED' && (
-                        <>
-                          <button
-                            onClick={() => handleUpdateAttendance(a.id, 'ATTENDED')}
-                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-800"
-                          >
-                            Mark Attended
-                          </button>
-                          <button
-                            onClick={() => handleUpdateAttendance(a.id, 'NO_SHOW')}
-                            className="text-xs font-semibold text-rose-600 hover:text-rose-800"
-                          >
-                            Mark No-Show
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
 
-      {/* Tab 2: Referrals */}
-      {activeTab === 'referrals' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-base font-bold text-slate-900">Clinical Specialist Referrals</h3>
+          <div className="flex items-center gap-2">
+            {activeTab === 'appointments' && (
+              <button
+                onClick={() => setShowBookModal(true)}
+                className="btn-healthcare-primary text-xs py-2 px-3.5 inline-flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Book Appointment</span>
+              </button>
+            )}
+            {activeTab === 'referrals' && (
+              <button
+                onClick={() => setShowReferralModal(true)}
+                className="btn-healthcare-primary text-xs py-2 px-3.5 inline-flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Issue Referral</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex border-b border-slate-200 space-x-6 text-xs font-semibold overflow-x-auto pb-1">
+          {[
+            { id: 'appointments', label: `Appointments (${appointments.length})` },
+            { id: 'referrals', label: `Specialist Referrals (${referrals.length})` },
+            { id: 'followups', label: `Automated Recalls (${followUps.length})` },
+            { id: 'closure', label: 'Verified Care-Gap Closure (Module G)' },
+          ].map((tab) => (
             <button
-              onClick={() => setShowReferralModal(true)}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium"
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`pb-3 font-semibold border-b-2 transition-all whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'border-forest-800 text-forest-900'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
             >
-              + Issue Clinical Referral
+              {tab.label}
             </button>
-          </div>
-          {referrals.length === 0 ? (
-            <div className="text-center py-8 text-slate-500 text-sm">No specialist referrals on record.</div>
-          ) : (
-            <table className="min-w-full divide-y divide-slate-200 text-xs">
-              <thead className="bg-slate-50 text-slate-600 font-medium">
-                <tr>
-                  <th className="px-4 py-2.5 text-left">Specialty</th>
-                  <th className="px-4 py-2.5 text-left">Clinical Indication</th>
-                  <th className="px-4 py-2.5 text-left">Priority</th>
-                  <th className="px-4 py-2.5 text-left">Status</th>
-                  <th className="px-4 py-2.5 text-left">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {referrals.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50/60">
-                    <td className="px-4 py-3 font-semibold text-slate-800">{r.specialty}</td>
-                    <td className="px-4 py-3 text-slate-600 max-w-sm">{r.clinical_indication}</td>
-                    <td className="px-4 py-3 font-mono">{r.priority}</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex px-2 py-0.5 rounded-full font-medium bg-blue-100 text-blue-800">
-                        {r.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500">{new Date(r.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          ))}
         </div>
-      )}
 
-      {/* Tab 3: Follow-Up Tasks */}
-      {activeTab === 'followups' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-slate-900">Automated Missed-Care Follow-Up Queue</h3>
-          {followUps.length === 0 ? (
-            <div className="text-center py-8 text-slate-500 text-sm">No pending follow-up tasks.</div>
-          ) : (
-            <table className="min-w-full divide-y divide-slate-200 text-xs">
-              <thead className="bg-slate-50 text-slate-600 font-medium">
-                <tr>
-                  <th className="px-4 py-2.5 text-left">Trigger Reason</th>
-                  <th className="px-4 py-2.5 text-left">Assigned Role</th>
-                  <th className="px-4 py-2.5 text-left">Priority</th>
-                  <th className="px-4 py-2.5 text-left">Due Date</th>
-                  <th className="px-4 py-2.5 text-left">Status</th>
-                  <th className="px-4 py-2.5 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {followUps.map((f) => (
-                  <tr key={f.id} className="hover:bg-slate-50/60">
-                    <td className="px-4 py-3 font-semibold text-rose-700">{f.trigger_reason}</td>
-                    <td className="px-4 py-3 text-slate-600">{f.assigned_role}</td>
-                    <td className="px-4 py-3 font-mono">{f.priority}</td>
-                    <td className="px-4 py-3 text-slate-500">{new Date(f.due_date).toLocaleDateString()}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex px-2 py-0.5 rounded-full font-medium ${
-                          f.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        {f.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {f.status !== 'RESOLVED' && (
-                        <button
-                          onClick={() => setResolvingTaskId(f.id)}
-                          className="text-xs font-semibold text-emerald-600 hover:text-emerald-800"
-                        >
-                          Resolve Task
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
-
-      {/* Tab 4: Verified Care-Gap Closure */}
-      {activeTab === 'closure' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-6">
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="text-base font-bold text-slate-900">Module G: Verified Clinical Care-Gap Closure</h3>
-            <p className="text-xs text-slate-500 mt-1">
-              Care gaps cannot be closed by superficial button clicks. Closure strictly requires verified clinical evidence
-              (Encounter, Screening Record, Lab Result, or Referral Outcome).
-            </p>
+        {/* Tab 1: Appointments */}
+        {activeTab === 'appointments' && (
+          <div className="card-healthcare overflow-hidden">
+            {appointments.length === 0 ? (
+              <div className="p-8">
+                <EmptyState
+                  title="No Appointments Scheduled"
+                  description="No preventive appointments are currently booked for this resident."
+                  action={{
+                    label: 'Book Preventive Visit',
+                    onClick: () => setShowBookModal(true),
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="table-healthcare text-xs">
+                  <thead>
+                    <tr>
+                      <th>Service Type</th>
+                      <th>Scheduled Time</th>
+                      <th>Clinic Location</th>
+                      <th>Status</th>
+                      <th className="text-right">Attendance Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {appointments.map((a) => (
+                      <tr key={a.id}>
+                        <td className="font-semibold text-slate-900">{a.service_type}</td>
+                        <td className="font-mono text-slate-600">
+                          {new Date(a.scheduled_time).toLocaleString()}
+                        </td>
+                        <td className="text-slate-600">{a.location}</td>
+                        <td>
+                          <StatusBadge status={a.status} />
+                        </td>
+                        <td className="text-right space-x-2">
+                          {a.status === 'BOOKED' && (
+                            <>
+                              <button
+                                onClick={() => handleUpdateAttendance(a.id, 'ATTENDED')}
+                                className="px-2.5 py-1 text-xs font-semibold rounded bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200"
+                              >
+                                Attended
+                              </button>
+                              <button
+                                onClick={() => handleUpdateAttendance(a.id, 'NO_SHOW')}
+                                className="px-2.5 py-1 text-xs font-semibold rounded bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200"
+                              >
+                                No-Show
+                              </button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
+        )}
 
-          <div className="max-w-xl space-y-4 text-sm">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Target Patient</label>
-              <select
-                value={selectedPatientId}
-                onChange={(e) => setSelectedPatientId(e.target.value)}
-                className="w-full rounded-lg border-slate-300 text-sm"
-              >
-                {patients.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.full_name} ({p.population_classification})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Care Gap to Close</label>
-              <select
-                value={closureGapId}
-                onChange={(e) => setClosureGapId(e.target.value)}
-                className="w-full rounded-lg border-slate-300 text-sm"
-              >
-                <option value="GAP-IFHAS-COMPREHENSIVE">GAP-IFHAS-COMPREHENSIVE (Adult Periodic Exam)</option>
-                <option value="GAP-WELL-CHILD-DUE">GAP-WELL-CHILD-DUE (Pediatric Well-Child Surveillance)</option>
-                <option value="GAP-BP-OVERDUE">GAP-BP-OVERDUE (Blood Pressure Reassessment)</option>
-                <option value="GAP-DM-GLUCOSE-OVERDUE">GAP-DM-GLUCOSE-OVERDUE (Diabetes Fasting Glucose)</option>
-                <option value="GAP-LIPID-SPECIALIST-EVALUATION">GAP-LIPID-SPECIALIST-EVALUATION (Cardiology Referral)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Verifiable Evidence Source</label>
-              <select
-                value={evidenceSource}
-                onChange={(e) => setEvidenceSource(e.target.value)}
-                className="w-full rounded-lg border-slate-300 text-sm"
-              >
-                <option value="SCREENING_RECORD">Verified Screening Encounter Record</option>
-                <option value="ENCOUNTER">Completed Clinical Outpatient Encounter</option>
-                <option value="LAB_RESULT">Verified Laboratory Result (LOINC match)</option>
-                <option value="REFERRAL_OUTCOME">Specialist Referral Outcome Report</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Evidence Record ID <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={evidenceId}
-                onChange={(e) => setEvidenceId(e.target.value)}
-                placeholder="e.g. enc_ifhas_2026_09118 or lab_glucose_8821"
-                className="w-full rounded-lg border-slate-300 text-sm font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Clinician Verification Notes</label>
-              <textarea
-                value={closureNotes}
-                onChange={(e) => setClosureNotes(e.target.value)}
-                placeholder="Doctor attestation notes: confirmed completed screening and acceptable physiological parameters..."
-                className="w-full rounded-lg border-slate-300 text-sm h-20"
-              />
-            </div>
-
-            <button
-              onClick={handleCloseCareGapWithEvidence}
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium shadow-sm"
-            >
-              Verify Evidence & Close Care Gap
-            </button>
+        {/* Tab 2: Referrals */}
+        {activeTab === 'referrals' && (
+          <div className="card-healthcare overflow-hidden">
+            {referrals.length === 0 ? (
+              <div className="p-8">
+                <EmptyState
+                  title="No Specialist Referrals"
+                  description="No clinical specialist referrals have been issued for this resident."
+                  action={{
+                    label: 'Issue Specialist Referral',
+                    onClick: () => setShowReferralModal(true),
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="table-healthcare text-xs">
+                  <thead>
+                    <tr>
+                      <th>Specialty</th>
+                      <th>Clinical Indication</th>
+                      <th>Priority</th>
+                      <th>Status</th>
+                      <th>Referral Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {referrals.map((r) => (
+                      <tr key={r.id}>
+                        <td className="font-semibold text-slate-900">{r.specialty}</td>
+                        <td className="text-slate-700 max-w-sm">{r.clinical_indication}</td>
+                        <td>
+                          <StatusBadge status={r.priority} />
+                        </td>
+                        <td>
+                          <StatusBadge status={r.status} />
+                        </td>
+                        <td className="font-mono text-slate-500">
+                          {new Date(r.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Book Appointment Modal */}
-      {showBookModal && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-900">Schedule Preventive Appointment</h3>
-            <div className="space-y-3 text-sm">
+        {/* Tab 3: Follow-Up Queue */}
+        {activeTab === 'followups' && (
+          <div className="card-healthcare overflow-hidden">
+            {followUps.length === 0 ? (
+              <div className="p-8">
+                <EmptyState
+                  title="No Follow-Up Recalls"
+                  description="All preventive recalls and follow-ups are currently resolved."
+                />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="table-healthcare text-xs">
+                  <thead>
+                    <tr>
+                      <th>Trigger Reason</th>
+                      <th>Assigned Role</th>
+                      <th>Priority</th>
+                      <th>Due Date</th>
+                      <th>Status</th>
+                      <th className="text-right">Resolution</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {followUps.map((f) => (
+                      <tr key={f.id}>
+                        <td className="font-semibold text-rose-800">{f.trigger_reason}</td>
+                        <td className="text-slate-700">{f.assigned_role}</td>
+                        <td>
+                          <StatusBadge status={f.priority} />
+                        </td>
+                        <td className="font-mono text-slate-500">
+                          {new Date(f.due_date).toLocaleDateString()}
+                        </td>
+                        <td>
+                          <StatusBadge status={f.status} />
+                        </td>
+                        <td className="text-right">
+                          {f.status !== 'RESOLVED' && (
+                            <button
+                              onClick={() => setResolvingTaskId(f.id)}
+                              className="px-2.5 py-1 text-xs font-semibold rounded bg-forest-50 text-forest-800 hover:bg-forest-100 border border-forest-200"
+                            >
+                              Resolve
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 4: Verified Care-Gap Closure (Module G) */}
+        {activeTab === 'closure' && (
+          <div className="card-healthcare p-6 space-y-6">
+            <div className="border-b border-slate-200 pb-3">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-forest-700" />
+                Module G: Verified Clinical Care-Gap Closure
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Care gaps cannot be closed by superficial button clicks. Closure strictly requires verified clinical evidence
+                (Encounter, Screening Record, Lab Result, or Referral Outcome) attested by an authorized clinician.
+              </p>
+            </div>
+
+            <div className="max-w-xl space-y-4 text-xs">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Service Type</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Target Care Gap to Close *
+                </label>
                 <select
-                  value={serviceType}
-                  onChange={(e) => setServiceType(e.target.value)}
-                  className="w-full rounded-lg border-slate-300 text-sm"
+                  value={closureGapId}
+                  onChange={(e) => setClosureGapId(e.target.value)}
+                  className="w-full rounded-lg border-slate-300 text-xs px-3 py-2 bg-white font-medium focus:ring-2 focus:ring-forest-600 focus:outline-none"
                 >
-                  <option value="WELL_CHILD_VISIT">Well-Child Examination</option>
-                  <option value="ADULT_IFHAS_COMPREHENSIVE">ADPHC IFHAS Screening</option>
-                  <option value="CARDIOMETABOLIC_BP_CHECK">Cardiometabolic BP Check</option>
-                  <option value="GENOMIC_COUNSELING">Genomic Counseling Consultation</option>
+                  <option value="GAP-IFHAS-COMPREHENSIVE">GAP-IFHAS-COMPREHENSIVE (Adult Periodic Exam)</option>
+                  <option value="GAP-WELL-CHILD-DUE">GAP-WELL-CHILD-DUE (Pediatric Well-Child Surveillance)</option>
+                  <option value="GAP-BP-OVERDUE">GAP-BP-OVERDUE (Blood Pressure Reassessment)</option>
+                  <option value="GAP-DM-GLUCOSE-OVERDUE">GAP-DM-GLUCOSE-OVERDUE (Diabetes Fasting Glucose)</option>
+                  <option value="GAP-LIPID-SPECIALIST-EVALUATION">GAP-LIPID-SPECIALIST-EVALUATION (Cardiology Referral)</option>
                 </select>
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Appointment Time</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Verifiable Evidence Source *
+                </label>
+                <select
+                  value={evidenceSource}
+                  onChange={(e) => setEvidenceSource(e.target.value)}
+                  className="w-full rounded-lg border-slate-300 text-xs px-3 py-2 bg-white font-medium focus:ring-2 focus:ring-forest-600 focus:outline-none"
+                >
+                  <option value="SCREENING_RECORD">Verified Screening Encounter Record</option>
+                  <option value="ENCOUNTER">Completed Clinical Outpatient Encounter</option>
+                  <option value="LAB_RESULT">Verified Laboratory Result (LOINC match)</option>
+                  <option value="REFERRAL_OUTCOME">Specialist Referral Outcome Report</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Verifiable Evidence Record ID *
+                </label>
                 <input
-                  type="datetime-local"
-                  value={apptTime}
-                  onChange={(e) => setApptTime(e.target.value)}
-                  className="w-full rounded-lg border-slate-300 text-sm"
+                  type="text"
+                  value={evidenceId}
+                  onChange={(e) => setEvidenceId(e.target.value)}
+                  placeholder="e.g. enc_ifhas_2026_09118 or lab_glucose_8821"
+                  className="w-full rounded-lg border-slate-300 text-xs px-3 py-2 font-mono focus:ring-2 focus:ring-forest-600 focus:outline-none"
                 />
               </div>
-            </div>
-            <div className="flex justify-end gap-3 pt-2">
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Clinician Attestation &amp; Verification Notes *
+                </label>
+                <textarea
+                  rows={3}
+                  value={closureNotes}
+                  onChange={(e) => setClosureNotes(e.target.value)}
+                  placeholder="Attest that verified screening results meet clinical criteria and close the care gap..."
+                  className="w-full rounded-lg border-slate-300 text-xs p-3 focus:ring-2 focus:ring-forest-600 focus:outline-none"
+                />
+              </div>
+
               <button
-                onClick={() => setShowBookModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-medium"
+                onClick={handleCloseCareGapWithEvidence}
+                className="btn-healthcare-primary text-xs py-2.5 px-5 flex items-center gap-1.5"
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleBookAppointment}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium"
-              >
-                Confirm Booking
+                <FileCheck className="w-4 h-4" />
+                <span>Verify Clinical Evidence &amp; Close Care Gap</span>
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Referral Modal */}
-      {showReferralModal && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-900">Issue Specialist Referral</h3>
-            <div className="space-y-3 text-sm">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Target Specialty</label>
-                <select
-                  value={specialty}
-                  onChange={(e) => setSpecialty(e.target.value)}
-                  className="w-full rounded-lg border-slate-300 text-sm"
+        {/* Booking Modal */}
+        {showBookModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+              <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                <h3 className="text-base font-bold text-slate-900">Book Preventive Care Appointment</h3>
+                <button
+                  onClick={() => setShowBookModal(false)}
+                  className="p-1 rounded text-slate-400 hover:text-slate-600"
                 >
-                  <option value="Preventive Cardiology">Preventive Cardiology</option>
-                  <option value="Endocrinology">Endocrinology & Diabetes</option>
-                  <option value="Medical Genetics">Medical Genetics & Genomic Counseling</option>
-                  <option value="Pediatrics">Pediatric Specialty Clinic</option>
-                </select>
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Clinical Indication</label>
-                <textarea
-                  value={clinicalIndication}
-                  onChange={(e) => setClinicalIndication(e.target.value)}
-                  placeholder="Enter medical justification and referral reason..."
-                  className="w-full rounded-lg border-slate-300 text-sm h-20"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => setShowReferralModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateReferral}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"
-              >
-                Submit Referral
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Resolve Follow-Up Modal */}
-      {resolvingTaskId && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-900">Resolve Follow-Up Task</h3>
-            <div className="space-y-3 text-sm">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Resolution Notes</label>
-                <textarea
-                  value={resolutionNotes}
-                  onChange={(e) => setResolutionNotes(e.target.value)}
-                  placeholder="Document actions taken to resolve missed care..."
-                  className="w-full rounded-lg border-slate-300 text-sm h-24"
-                />
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Service Type *</label>
+                  <select
+                    value={serviceType}
+                    onChange={(e) => setServiceType(e.target.value)}
+                    className="w-full rounded-lg border-slate-300 text-xs px-3 py-2 bg-white font-medium focus:ring-2 focus:ring-forest-600 focus:outline-none"
+                  >
+                    <option value="WELL_CHILD_VISIT">Well-Child Visit (Pediatric)</option>
+                    <option value="IFHAS_COMPREHENSIVE">IFHAS Comprehensive Screening (Adult)</option>
+                    <option value="CARDIOVASCULAR_RISK_CHECK">Cardiovascular Risk Check</option>
+                    <option value="DIABETES_GLUCOSE_SCREEN">Diabetes Fasting Glucose Screen</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Date &amp; Time *</label>
+                  <input
+                    type="datetime-local"
+                    value={apptTime}
+                    onChange={(e) => setApptTime(e.target.value)}
+                    className="w-full rounded-lg border-slate-300 text-xs px-3 py-2 focus:ring-2 focus:ring-forest-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                <button
+                  onClick={() => setShowBookModal(false)}
+                  className="btn-healthcare-secondary text-xs px-4 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBookAppointment}
+                  className="btn-healthcare-primary text-xs px-4 py-2"
+                >
+                  Confirm Booking
+                </button>
               </div>
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => {
-                  setResolvingTaskId(null);
-                  setResolutionNotes('');
-                }}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleResolveFollowUp(resolvingTaskId)}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium"
-              >
-                Confirm Resolution
-              </button>
+          </div>
+        )}
+
+        {/* Referral Modal */}
+        {showReferralModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+              <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                <h3 className="text-base font-bold text-slate-900">Issue Clinical Specialist Referral</h3>
+                <button
+                  onClick={() => setShowReferralModal(false)}
+                  className="p-1 rounded text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Target Specialty *</label>
+                  <select
+                    value={specialty}
+                    onChange={(e) => setSpecialty(e.target.value)}
+                    className="w-full rounded-lg border-slate-300 text-xs px-3 py-2 bg-white font-medium focus:ring-2 focus:ring-forest-600 focus:outline-none"
+                  >
+                    <option value="Preventive Cardiology">Preventive Cardiology</option>
+                    <option value="Endocrinology & Diabetes">Endocrinology &amp; Diabetes</option>
+                    <option value="Pediatric Developmental Medicine">Pediatric Developmental Medicine</option>
+                    <option value="Genetics & Genomic Medicine">Genetics &amp; Genomic Medicine</option>
+                    <option value="Lifestyle & Preventive Medicine">Lifestyle &amp; Preventive Medicine</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Clinical Indication &amp; Reason for Referral *
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={clinicalIndication}
+                    onChange={(e) => setClinicalIndication(e.target.value)}
+                    placeholder="Document clinical observations, laboratory anomalies, or risk assessment triggers..."
+                    className="w-full rounded-lg border-slate-300 text-xs p-3 focus:ring-2 focus:ring-forest-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                <button
+                  onClick={() => setShowReferralModal(false)}
+                  className="btn-healthcare-secondary text-xs px-4 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateReferral}
+                  className="btn-healthcare-primary text-xs px-4 py-2"
+                >
+                  Issue Referral Order
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {/* Resolve Task Modal */}
+        {resolvingTaskId && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+              <h3 className="text-base font-bold text-slate-900">Resolve Follow-Up Recall Task</h3>
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Resolution Notes &amp; Outcome *
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={resolutionNotes}
+                    onChange={(e) => setResolutionNotes(e.target.value)}
+                    placeholder="Document outcome of follow-up call, rescheduled appointment, or resident confirmation..."
+                    className="w-full rounded-lg border-slate-300 text-xs p-3 focus:ring-2 focus:ring-forest-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                <button
+                  onClick={() => setResolvingTaskId(null)}
+                  className="btn-healthcare-secondary text-xs px-4 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleResolveFollowUp(resolvingTaskId)}
+                  className="btn-healthcare-primary text-xs px-4 py-2"
+                >
+                  Confirm Resolution
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </AppShell>
   );
 }
 
 export default function NavigationPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-500">Loading Navigation...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-12 text-center text-slate-400">
+          <div className="w-6 h-6 border-2 border-forest-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <span>Loading care navigation...</span>
+        </div>
+      }
+    >
       <NavigationContent />
     </Suspense>
   );

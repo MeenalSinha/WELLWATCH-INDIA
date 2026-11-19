@@ -251,6 +251,7 @@ backend/tests/test_security_headers.py::test_correlation_id_middleware_direct PA
 All technical, clinical, and architectural documentation is maintained within the `docs/` directory:
 
 ### Verification & Audit Reports
+- [Comprehensive UI/UX Redesign & Visual Enhancement Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/UI_UX_REDESIGN_REPORT.md)
 - [Phases 4 to 8 Final Master Audit and Evidence Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/PHASE_4_TO_8_FINAL_AUDIT.md)
 - [Phases 0 to 3 Independent Re-verification Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/PHASE_0_TO_3_REVERIFICATION.md)
 - [Phases 0 to 3 Baseline Verification and Audit Report](file:///c:/Users/Meenal%20Sinha/Downloads/WELLWATCH-INDIA/docs/PHASE_0_TO_3_FINAL_AUDIT.md)
