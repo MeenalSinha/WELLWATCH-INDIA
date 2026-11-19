@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from backend.app.api.v1.api import api_router
 from backend.app.core.config import settings
 from backend.app.core.database import Base, engine
@@ -117,3 +117,8 @@ def root():
         "jurisdiction": settings.JURISDICTION,
         "docs": f"{settings.API_V1_STR}/docs"
     }
+
+
+@app.get("/docs", include_in_schema=False)
+def redirect_docs():
+    return RedirectResponse(url=f"{settings.API_V1_STR}/docs")

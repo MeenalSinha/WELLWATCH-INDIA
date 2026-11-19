@@ -1,0 +1,13 @@
+node_modules
+frontend/node_modules
+frontend/.next
+.git
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite
+data/*.db
+data/*.sqlite

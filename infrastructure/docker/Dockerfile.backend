@@ -25,7 +25,7 @@ FROM python:3.11-slim AS runner
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/install/bin:$PATH" \
-    PYTHONPATH="/app:$PYTHONPATH"
+    PYTHONPATH="/install/lib/python3.11/site-packages:/app:$PYTHONPATH"
 
 WORKDIR /app
 

@@ -8,7 +8,11 @@ engine_kwargs = {
     "pool_pre_ping": True,
 }
 
-if settings.DATABASE_URL.startswith("sqlite"):
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+if db_url.startswith("sqlite"):
     engine_kwargs["connect_args"] = {"check_same_thread": False}
 else:
     # Production-grade PostgreSQL pooling configuration
@@ -20,7 +24,7 @@ else:
     })
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    db_url,
     **engine_kwargs,
 )
 
