@@ -30,9 +30,9 @@ jobs:
         run: |
           python -m alembic -c backend/alembic.ini upgrade head
 
-      - name: Run Pytest Test Suite with Coverage
+      - name: Run Pytest Test Suite
         run: |
-          python -m pytest backend/tests/ -v --cov=backend/app --cov-report=term-missing
+          python -m pytest backend/tests/ -v
 
       - name: Run Automated Backup and Recovery Test
         run: |
