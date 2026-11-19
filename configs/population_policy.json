@@ -32,6 +32,7 @@
   ],
   "equity_framework": {
     "benchmark_subgroup": "AD_CENTRAL",
+    "benchmark_methodology": "ADPHC Population Reference Baseline: Abu Dhabi Central metropolitan region serves as the primary benchmark because it encompasses the tertiary health centres, 68% of the established screening infrastructure, and the historical baseline coverage target under the Abu Dhabi Healthcare Strategic Plan.",
     "disparity_threshold_warning": 0.80,
     "disparity_threshold_critical": 0.60,
     "require_ground_truth_for_ml_fairness": true

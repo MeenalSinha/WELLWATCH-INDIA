@@ -68,11 +68,13 @@ class GeographicAnalyticsResponse(BaseModel):
     regions: List[GeographicRegionMetric]
     small_cell_threshold: int
     suppression_applied: bool
+    unclassified_population: Union[int, str] = 0
     generated_at: datetime
 
 
 class PopulationEquityResponse(BaseModel):
     benchmark_region: str
+    benchmark_methodology: Optional[str] = None
     subgroup_metrics: List[Dict[str, Any]]
     disparity_ratios: Dict[str, float]
     data_completeness_by_subgroup: Dict[str, float]

@@ -296,9 +296,23 @@ def test_geographic_analytics_realistic_mapping_and_data_completeness(db_session
     assert PopulationAnalyticsService.classify_person_region(p_dhafra) == "AL_DHAFRA"
     assert PopulationAnalyticsService.classify_person_region(p_central) == "AD_CENTRAL"
 
-    # Verify Equity Analytics data completeness calculation
+    # Patient with no district and unclassified org is NOT arbitrarily dumped into AD_CENTRAL
+    p_unclass = Person(
+        first_name="Rashid",
+        last_name="Unknown",
+        date_of_birth=date.today() - timedelta(days=365 * 20),
+        gender=Gender.MALE,
+        district=None,
+    )
+    db_session.add(p_unclass)
+    db_session.commit()
+    assert PopulationAnalyticsService.classify_person_region(p_unclass) is None
+
+    # Verify Equity Analytics data completeness calculation & explicit methodology
     equity = PopulationAnalyticsService.get_equity_analytics(db=db_session, organization_id=org.id)
     assert equity.benchmark_region == "AD_CENTRAL"
+    assert equity.benchmark_methodology is not None
+    assert "ADPHC" in equity.benchmark_methodology
     assert "AD_CENTRAL" in equity.data_completeness_by_subgroup
     assert "AL_AIN" in equity.data_completeness_by_subgroup
     assert "AL_DHAFRA" in equity.data_completeness_by_subgroup

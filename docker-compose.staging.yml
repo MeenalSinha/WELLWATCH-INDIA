@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wellwatch-staging-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wellwatch_staging}
+      POSTGRES_USER: ${POSTGRES_USER:-wellwatch_staging_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-staging_secure_pass_change_me_2026}
+    volumes:
+      - staging_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wellwatch_staging_user} -d ${POSTGRES_DB:-wellwatch_staging}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.backend
+    container_name: wellwatch-staging-backend
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: staging
+      PROJECT_NAME: "WELLWATCH PREVENT (Staging)"
+      SECRET_KEY: ${SECRET_KEY:-staging_secret_key_32chars_minimum_length_required_here}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-wellwatch_staging_user}:${POSTGRES_PASSWORD:-staging_secure_pass_change_me_2026}@postgres:5432/${POSTGRES_DB:-wellwatch_staging}
+      BACKEND_CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000","http://staging.wellwatch.ae"]'
+      DATABASE_POOL_SIZE: 10
+      DATABASE_MAX_OVERFLOW: 5
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal-net
+      - public-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.frontend
+    container_name: wellwatch-staging-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - public-net
+
+volumes:
+  staging_postgres_data:
+    driver: local
+
+networks:
+  internal-net:
+    internal: true
+  public-net:
+    driver: bridge

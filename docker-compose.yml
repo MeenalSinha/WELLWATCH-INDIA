@@ -3,18 +3,18 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: wellwatch-postgres
-    restart: always
+    container_name: wellwatch-dev-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: wellwatch_prevent
-      POSTGRES_USER: wellwatch_user
-      POSTGRES_PASSWORD: wellwatch_secure_password_dev_only
+      POSTGRES_DB: ${POSTGRES_DB:-wellwatch_prevent}
+      POSTGRES_USER: ${POSTGRES_USER:-wellwatch_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wellwatch_secure_password_dev_only}
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - dev_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wellwatch_user -d wellwatch_prevent"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wellwatch_user} -d ${POSTGRES_DB:-wellwatch_prevent}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,13 +23,13 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.backend
-    container_name: wellwatch-backend
-    restart: always
+    container_name: wellwatch-dev-backend
+    restart: unless-stopped
     environment:
-      ENVIRONMENT: production
-      PROJECT_NAME: "WELLWATCH PREVENT"
-      SECRET_KEY: "wellwatch-prevent-production-secure-key-32chars-min"
-      DATABASE_URL: "postgresql://wellwatch_user:wellwatch_secure_password_dev_only@postgres:5432/wellwatch_prevent"
+      ENVIRONMENT: development
+      PROJECT_NAME: "WELLWATCH PREVENT (Dev)"
+      SECRET_KEY: ${SECRET_KEY:-wellwatch-prevent-secure-development-secret-key-32chars-min}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-wellwatch_user}:${POSTGRES_PASSWORD:-wellwatch_secure_password_dev_only}@postgres:5432/${POSTGRES_DB:-wellwatch_prevent}
       BACKEND_CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000"]'
     ports:
       - "8000:8000"
@@ -41,8 +41,8 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.frontend
-    container_name: wellwatch-frontend
-    restart: always
+    container_name: wellwatch-dev-frontend
+    restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: "http://localhost:8000/api/v1"
     ports:
@@ -51,5 +51,5 @@ services:
       - backend
 
 volumes:
-  postgres_data:
+  dev_postgres_data:
     driver: local

@@ -686,11 +686,13 @@ export interface GeographicAnalyticsResponse {
   regions: GeographicRegionMetric[];
   small_cell_threshold: number;
   suppression_applied: boolean;
+  unclassified_population?: number | string;
   generated_at: string;
 }
 
 export interface PopulationEquityResponse {
   benchmark_region: string;
+  benchmark_methodology?: string;
   subgroup_metrics: Array<Record<string, any>>;
   disparity_ratios: Record<string, number>;
   data_completeness_by_subgroup: Record<string, number>;

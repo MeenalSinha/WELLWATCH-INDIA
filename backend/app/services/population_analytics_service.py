@@ -474,8 +474,8 @@ class PopulationAnalyticsService:
             if "CENTRAL" in org_reg or "ABU_DHABI" in org_reg or any(k in org_name for k in ad_central_keywords):
                 return "AD_CENTRAL"
 
-        # 3. Default to AD_CENTRAL (>65% of Abu Dhabi emirate population)
-        return "AD_CENTRAL"
+        # 3. Do not manufacture geographic assignments: return None if unverified
+        return None
 
     @staticmethod
     def get_geographic_analytics(
@@ -498,12 +498,13 @@ class PopulationAnalyticsService:
 
         # Map persons to geographic regions (Abu Dhabi Central, Al Ain, Al Dhafra) using real demographic & facility data
         region_buckets: Dict[str, List[Person]] = {r["code"]: [] for r in regions_config}
+        unclassified_persons: List[Person] = []
         for p in persons:
             rc = PopulationAnalyticsService.classify_person_region(p)
-            if rc in region_buckets:
+            if rc and rc in region_buckets:
                 region_buckets[rc].append(p)
             else:
-                region_buckets.setdefault("AD_CENTRAL", []).append(p)
+                unclassified_persons.append(p)
 
         results: List[GeographicRegionMetric] = []
         suppression_applied = False
@@ -579,6 +580,12 @@ class PopulationAnalyticsService:
                 )
             )
 
+        unclass_count = len(unclassified_persons)
+        unclass_display: Union[int, str] = unclass_count
+        if 0 < unclass_count < threshold:
+            unclass_display = suppression_label
+            suppression_applied = True
+
         # Audit Access Log
         access_log = AnalyticsAccessLog(
             user_id=user_id,
@@ -596,6 +603,7 @@ class PopulationAnalyticsService:
             regions=results,
             small_cell_threshold=threshold,
             suppression_applied=suppression_applied,
+            unclassified_population=unclass_display,
             generated_at=datetime.utcnow(),
         )
 
@@ -608,6 +616,7 @@ class PopulationAnalyticsService:
         """Responsible AI and Population Equity analysis comparing coverage across subgroups."""
         policy = PopulationAnalyticsService._load_policy()
         benchmark = policy.get("equity_framework", {}).get("benchmark_subgroup", "AD_CENTRAL")
+        benchmark_methodology = policy.get("equity_framework", {}).get("benchmark_methodology")
         regions_config = policy.get("geographic_regions", [])
         geo_data = PopulationAnalyticsService.get_geographic_analytics(db, organization_id, user_id=user_id)
 
@@ -620,15 +629,13 @@ class PopulationAnalyticsService:
         region_scores: Dict[str, List[float]] = {r["code"]: [] for r in regions_config}
         for p in all_persons:
             rc = PopulationAnalyticsService.classify_person_region(p)
-            score = (
-                p.patient_profile.completeness_score
-                if p.patient_profile and p.patient_profile.completeness_score is not None
-                else 0.0
-            )
-            if rc in region_scores:
+            if rc and rc in region_scores:
+                score = (
+                    p.patient_profile.completeness_score
+                    if p.patient_profile and p.patient_profile.completeness_score is not None
+                    else 0.0
+                )
                 region_scores[rc].append(score)
-            else:
-                region_scores.setdefault("AD_CENTRAL", []).append(score)
 
         subgroup_metrics = []
         disparity_ratios = {}
@@ -691,6 +698,7 @@ class PopulationAnalyticsService:
 
         return PopulationEquityResponse(
             benchmark_region=benchmark,
+            benchmark_methodology=benchmark_methodology,
             subgroup_metrics=subgroup_metrics,
             disparity_ratios=disparity_ratios,
             data_completeness_by_subgroup=data_completeness,
