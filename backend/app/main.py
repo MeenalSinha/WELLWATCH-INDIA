@@ -22,6 +22,19 @@ async def lifespan(app: FastAPI):
         logger.info("Development mode: Ensuring local database tables exist...")
         Base.metadata.create_all(bind=engine)
         logger.info("Database schema initialized successfully.")
+
+        try:
+            from backend.app.core.database import SessionLocal
+            from backend.app.models.user import User
+            from backend.app.services.seed_service import seed_initial_development_data
+
+            with SessionLocal() as db:
+                if db.query(User).count() == 0:
+                    logger.info("Empty user catalog in development mode. Auto-seeding default test personas...")
+                    seed_initial_development_data(db)
+                    logger.info("Auto-seeding completed successfully.")
+        except Exception as seed_err:
+            logger.warning(f"Development auto-seeding encountered an issue: {seed_err}")
     yield
     logger.info("Shutting down WellWatch Prevent application.")
 
