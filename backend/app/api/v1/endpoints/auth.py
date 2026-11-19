@@ -1,6 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy.orm import Session
+from backend.app.core.config import settings
 from backend.app.core.database import get_db
 from backend.app.core.security import create_access_token, decode_token
 from backend.app.models.user import User, UserRole
@@ -74,7 +75,7 @@ def refresh_token(
 
     return TokenResponse(
         access_token=new_access_token,
-        expires_in=1800,
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         refresh_token=refresh_req.refresh_token,
         user_id=user.id,
         role=user.role,

@@ -8,6 +8,11 @@ export const getStoredToken = (): string | null => {
   return sessionStorage.getItem(TOKEN_KEY);
 };
 
+export const getStoredRefreshToken = (): string | null => {
+  const user = getStoredUser();
+  return user?.refresh_token || null;
+};
+
 export const getStoredUser = (): TokenResponse | null => {
   if (typeof window === 'undefined') return null;
   const raw = sessionStorage.getItem(USER_KEY);

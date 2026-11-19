@@ -12,6 +12,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState('ValidPass123!');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionNotice, setSessionNotice] = useState<string | null>(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('expired=1')) {
+      return 'Your session has expired. Please sign in to continue.';
+    }
+    return null;
+  });
 
   const personaOptions = [
     { label: 'Healthcare Provider (Physician)', email: 'healthcare_provider@wellwatch.ae' },
@@ -78,6 +84,12 @@ export default function LoginPage() {
             ))}
           </select>
         </div>
+
+        {sessionNotice && (
+          <div className="p-3 rounded-md bg-amber-50 border border-amber-200 text-xs text-amber-800 font-medium">
+            {sessionNotice}
+          </div>
+        )}
 
         {error && (
           <div className="p-3 rounded-md bg-rose-50 border border-rose-200 text-xs text-rose-800 font-medium">

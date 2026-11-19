@@ -28,6 +28,7 @@ services:
       PROJECT_NAME: "WELLWATCH PREVENT (Dev)"
       SECRET_KEY: ${SECRET_KEY:-wellwatch-prevent-secure-development-secret-key-32chars-min}
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-wellwatch_user}:${POSTGRES_PASSWORD:-wellwatch_secure_password_dev_only}@postgres:5432/${POSTGRES_DB:-wellwatch_prevent}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-480}
       BACKEND_CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000"]'
     ports:
       - "8000:8000"

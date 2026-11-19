@@ -56,7 +56,7 @@ import {
   TerminologyLookupResponse,
   IntegrationMonitoringResponse,
 } from '@/types';
-import { getStoredToken } from './auth';
+import { getStoredToken, getStoredRefreshToken, setSession, clearSession } from './auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
@@ -73,8 +73,48 @@ export class ApiError extends Error {
   }
 }
 
+let refreshPromise: Promise<string | null> | null = null;
+
+async function performTokenRefresh(): Promise<string | null> {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  const refreshToken = getStoredRefreshToken();
+  if (!refreshToken) {
+    clearSession();
+    return null;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      if (!response.ok) {
+        clearSession();
+        return null;
+      }
+
+      const newTokenData: TokenResponse = await response.json();
+      setSession(newTokenData);
+      return newTokenData.access_token;
+    } catch {
+      clearSession();
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = getStoredToken();
+  let token = getStoredToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -84,10 +124,26 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  let response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
   });
+
+  // Handle Token Expiration: Transparently refresh and retry
+  if (response.status === 401 && endpoint !== '/auth/login' && endpoint !== '/auth/refresh') {
+    const newAccessToken = await performTokenRefresh();
+    if (newAccessToken) {
+      headers['Authorization'] = `Bearer ${newAccessToken}`;
+      response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
+      });
+    } else {
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login?expired=1';
+      }
+    }
+  }
 
   const correlationId = response.headers.get('x-correlation-id') || undefined;
 
