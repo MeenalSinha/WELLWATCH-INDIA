@@ -425,6 +425,59 @@ class PopulationAnalyticsService:
         )
 
     @staticmethod
+    def classify_person_region(person: Person) -> str:
+        """
+        Authoritative geographic region classifier for Abu Dhabi Emirate:
+        - AD_CENTRAL: Abu Dhabi Metropolitan & Central (Abu Dhabi Island, Khalifa City, MBZ, Yas, Al Reem, etc.)
+        - AL_AIN: Eastern region (Al Ain, Al Jimi, Al Hili, Zakher, Al Maqam, etc.)
+        - AL_DHAFRA: Western region (Madinat Zayed, Ghayathi, Ruwais, Liwa, Mirfa, Sila, Delma, etc.)
+        Uses person's district, household district, primary organization region, or normalized fallback.
+        """
+        ad_central_keywords = [
+            "abu dhabi", "central", "al bateen", "bateen", "al reem", "reem", "al maryah", "maryah",
+            "khalifa city", "khalifa", "mohammed bin zayed", "mbz", "yas", "yas island",
+            "al zahiyah", "al mushrif", "mushrif", "al karamah", "al muroor", "muroor",
+            "saadiyat", "musaffah", "shakhbout", "baniyas", "al shamkha", "shamkha",
+            "al shawamekh", "madinat al riyad", "corniche", "al dana", "khalidiyah"
+        ]
+        al_ain_keywords = [
+            "al ain", "al-ain", "ain", "al jimi", "jimi", "al hili", "hili", "zakher",
+            "al maqam", "maqam", "al muwaiji", "muwaiji", "al towayya", "al markhaniya",
+            "al khabisi", "falaj hazza", "al yahar", "yahar", "al salamat", "remah",
+            "sweihan", "al qua'a", "al wagan", "nahel", "al hayer"
+        ]
+        al_dhafra_keywords = [
+            "al dhafra", "dhafra", "al-dhafra", "madinat zayed", "zayed city", "ghayathi",
+            "ruwais", "liwa", "mirfa", "al mirfa", "sila", "al sila", "delma", "habshan",
+            "beda zayed", "bida zayed"
+        ]
+
+        # 1. Inspect direct person district
+        district = (person.district or "").lower().strip()
+        if district:
+            if any(k in district for k in al_dhafra_keywords):
+                return "AL_DHAFRA"
+            if any(k in district for k in al_ain_keywords):
+                return "AL_AIN"
+            if any(k in district for k in ad_central_keywords):
+                return "AD_CENTRAL"
+
+        # 2. Inspect associated organization / facility region
+        if person.patient_profile and person.patient_profile.organization:
+            org = person.patient_profile.organization
+            org_reg = (org.region or "").upper()
+            org_name = (org.name or "").lower()
+            if "AL_AIN" in org_reg or any(k in org_name for k in al_ain_keywords):
+                return "AL_AIN"
+            if "DHAFRA" in org_reg or any(k in org_name for k in al_dhafra_keywords):
+                return "AL_DHAFRA"
+            if "CENTRAL" in org_reg or "ABU_DHABI" in org_reg or any(k in org_name for k in ad_central_keywords):
+                return "AD_CENTRAL"
+
+        # 3. Default to AD_CENTRAL (>65% of Abu Dhabi emirate population)
+        return "AD_CENTRAL"
+
+    @staticmethod
     def get_geographic_analytics(
         db: Session,
         organization_id: Optional[str] = None,
@@ -434,6 +487,7 @@ class PopulationAnalyticsService:
         policy = PopulationAnalyticsService._load_policy()
         threshold = policy.get("privacy_controls", {}).get("small_cell_suppression_threshold", 5)
         suppression_label = policy.get("privacy_controls", {}).get("suppression_label", "< 5")
+        apply_comp_suppression = policy.get("privacy_controls", {}).get("apply_complementary_suppression", True)
         regions_config = policy.get("geographic_regions", [])
 
         # Fetch persons
@@ -442,16 +496,20 @@ class PopulationAnalyticsService:
             person_query = person_query.join(PatientProfile).filter(PatientProfile.organization_id == organization_id)
         persons = person_query.all()
 
-        # Map persons to geographic regions (Abu Dhabi Central, Al Ain, Al Dhafra)
+        # Map persons to geographic regions (Abu Dhabi Central, Al Ain, Al Dhafra) using real demographic & facility data
         region_buckets: Dict[str, List[Person]] = {r["code"]: [] for r in regions_config}
-        for idx, p in enumerate(persons):
-            # Deterministic geographic assignment based on hash or person id if no explicit region field
-            region_code = regions_config[idx % len(regions_config)]["code"]
-            region_buckets[region_code].append(p)
+        for p in persons:
+            rc = PopulationAnalyticsService.classify_person_region(p)
+            if rc in region_buckets:
+                region_buckets[rc].append(p)
+            else:
+                region_buckets.setdefault("AD_CENTRAL", []).append(p)
 
         results: List[GeographicRegionMetric] = []
         suppression_applied = False
 
+        # Gather preliminary counts
+        raw_stats = []
         for r in regions_config:
             code = r["code"]
             reg_persons = region_buckets.get(code, [])
@@ -469,11 +527,36 @@ class PopulationAnalyticsService:
                 if reg_person_ids
                 else 0
             )
+            # Primary small-cell suppression condition: 0 < count < threshold
+            is_supp = (0 < reg_count < threshold) or (0 < completed_count < threshold)
+            raw_stats.append({
+                "code": code,
+                "name_en": r["name_en"],
+                "name_ar": r["name_ar"],
+                "reg_count": reg_count,
+                "completed_count": completed_count,
+                "is_suppressed": is_supp,
+            })
 
-            # Apply Small-Cell Privacy Suppression if count < threshold
-            is_suppressed = False
-            if 0 < reg_count < threshold or (0 < completed_count < threshold):
-                is_suppressed = True
+        # Complementary (secondary) suppression:
+        # If exactly 1 cell is suppressed out of non-empty regions, suppress the second smallest to prevent differencing
+        if apply_comp_suppression:
+            supp_count = sum(1 for s in raw_stats if s["is_suppressed"])
+            non_empty_count = sum(1 for s in raw_stats if s["reg_count"] > 0)
+            if supp_count == 1 and non_empty_count > 1:
+                # Find second smallest non-suppressed non-empty region
+                non_supp = [s for s in raw_stats if not s["is_suppressed"] and s["reg_count"] > 0]
+                if non_supp:
+                    secondary = min(non_supp, key=lambda s: s["reg_count"])
+                    secondary["is_suppressed"] = True
+
+        for s in raw_stats:
+            code = s["code"]
+            reg_count = s["reg_count"]
+            completed_count = s["completed_count"]
+            is_suppressed = s["is_suppressed"]
+
+            if is_suppressed:
                 suppression_applied = True
                 reg_display = suppression_label
                 comp_display = suppression_label
@@ -486,8 +569,8 @@ class PopulationAnalyticsService:
             results.append(
                 GeographicRegionMetric(
                     region_code=code,
-                    region_name_en=r["name_en"],
-                    region_name_ar=r["name_ar"],
+                    region_name_en=s["name_en"],
+                    region_name_ar=s["name_ar"],
                     registered_population=reg_display,
                     eligible_population=reg_display,
                     completed_screenings=comp_display,
@@ -525,13 +608,34 @@ class PopulationAnalyticsService:
         """Responsible AI and Population Equity analysis comparing coverage across subgroups."""
         policy = PopulationAnalyticsService._load_policy()
         benchmark = policy.get("equity_framework", {}).get("benchmark_subgroup", "AD_CENTRAL")
+        regions_config = policy.get("geographic_regions", [])
         geo_data = PopulationAnalyticsService.get_geographic_analytics(db, organization_id, user_id=user_id)
 
-        benchmark_coverage = 50.0
+        # Retrieve persons to aggregate actual data completeness from PatientProfile
+        person_query = db.query(Person)
+        if organization_id:
+            person_query = person_query.join(PatientProfile).filter(PatientProfile.organization_id == organization_id)
+        all_persons = person_query.all()
+
+        region_scores: Dict[str, List[float]] = {r["code"]: [] for r in regions_config}
+        for p in all_persons:
+            rc = PopulationAnalyticsService.classify_person_region(p)
+            score = (
+                p.patient_profile.completeness_score
+                if p.patient_profile and p.patient_profile.completeness_score is not None
+                else 0.0
+            )
+            if rc in region_scores:
+                region_scores[rc].append(score)
+            else:
+                region_scores.setdefault("AD_CENTRAL", []).append(score)
+
         subgroup_metrics = []
         disparity_ratios = {}
         data_completeness = {}
 
+        # Determine benchmark coverage honestly without hardcoded fallbacks
+        benchmark_coverage = 0.0
         for r in geo_data.regions:
             cov = r.screening_coverage_percentage if r.screening_coverage_percentage is not None else 0.0
             if r.region_code == benchmark and cov > 0:
@@ -542,12 +646,36 @@ class PopulationAnalyticsService:
                 "coverage": cov,
                 "is_suppressed": r.is_suppressed,
             })
-            data_completeness[r.region_code] = 95.0
+
+            # Calculate true data completeness from actual patient profiles per region
+            sc_list = region_scores.get(r.region_code, [])
+            if sc_list:
+                avg = sum(sc_list) / len(sc_list)
+                comp_pct = round(avg * 100.0 if avg <= 1.0 else avg, 1)
+            else:
+                comp_pct = 0.0
+            data_completeness[r.region_code] = comp_pct
+
+        # If benchmark region has zero coverage, calculate total population screening coverage as benchmark baseline
+        if benchmark_coverage == 0.0:
+            total_reg = len(all_persons)
+            total_comp = (
+                db.query(ScreeningRecord.patient_id)
+                .distinct()
+                .filter(ScreeningRecord.screening_status == ScreeningStatus.COMPLETED)
+                .count()
+                if total_reg > 0
+                else 0
+            )
+            benchmark_coverage = round((total_comp / total_reg) * 100.0, 1) if total_reg > 0 else 0.0
 
         for sm in subgroup_metrics:
             code = sm["subgroup"]
             cov = sm["coverage"]
-            ratio = round(cov / benchmark_coverage, 2) if benchmark_coverage > 0 else 1.0
+            if benchmark_coverage > 0:
+                ratio = round(cov / benchmark_coverage, 2)
+            else:
+                ratio = 1.0 if cov == 0.0 else round(cov / 1.0, 2)
             disparity_ratios[code] = ratio
 
         # Responsible AI Guardrail: Do not fabricate ML fairness metrics if ground-truth outcome labels are absent
@@ -608,8 +736,8 @@ class PopulationAnalyticsService:
             closed_gaps = (
                 db.query(CareGapClosureEvidence)
                 .filter(
-                    CareGapClosureEvidence.recorded_at >= period_start,
-                    CareGapClosureEvidence.recorded_at < period_end,
+                    CareGapClosureEvidence.verified_at >= period_start,
+                    CareGapClosureEvidence.verified_at < period_end,
                 )
                 .count()
             )

@@ -195,3 +195,116 @@ def test_population_report_generation_rbac(db_session: Session):
     res = generate_population_report(payload=req, db=db_session, current_user=gov_officer)
     assert res.report_type == "POPULATION_SUMMARY"
     assert "metrics_summary" in res.model_dump()
+
+
+def test_population_trends_with_verified_care_gap_closure(db_session: Session):
+    """Verifies that longitudinal trends calculate closed care gaps using genuine verified_at timestamps."""
+    from backend.app.models.navigation import CareGapClosureEvidence
+    from backend.app.models.recommendation import PreventiveRecommendation, RecommendationCategory, RecommendationPriority, RecommendationLifecycleStatus
+
+    org, admin = _setup_org_and_admin(db_session)
+    patient = PersonService.register_person(
+        db=db_session,
+        first_name="Sultan",
+        last_name="Al Nuaimi",
+        date_of_birth=date.today() - timedelta(days=365 * 42),
+        gender=Gender.MALE,
+        organization_id=org.id,
+    )
+
+    rec = PreventiveRecommendation(
+        organization_id=org.id,
+        person_id=patient.id,
+        pathway_id="ADPHC_DIABETES",
+        category=RecommendationCategory.ADULT_COMPREHENSIVE_SCREENING,
+        priority=RecommendationPriority.MEDIUM,
+        lifecycle_status=RecommendationLifecycleStatus.COMPLETED,
+        recommended_action="HbA1c Blood Test",
+        clinical_rationale="Overdue diabetes screening",
+        source_guideline="ADPHC 2026",
+        rule_id="RULE-DIAB-001",
+        rule_version="1.0.0",
+    )
+    db_session.add(rec)
+    db_session.commit()
+
+    closure = CareGapClosureEvidence(
+        organization_id=org.id,
+        person_id=patient.id,
+        care_gap_id="GAP-DIAB-001",
+        recommendation_id=rec.id,
+        evidence_source="LAB_RESULT",
+        evidence_id="LAB-HBA1C-991",
+        verification_method="AUTOMATED_OBSERVATION_MATCH",
+        verifying_user_id=admin.id,
+        verified_at=datetime.utcnow() - timedelta(days=5),
+        is_valid=True,
+    )
+    db_session.add(closure)
+    db_session.commit()
+
+    trends = PopulationAnalyticsService.get_trends(db=db_session, organization_id=org.id)
+    assert len(trends.trend_points) == 6
+    latest_month = trends.trend_points[-1]
+    assert latest_month.closed_care_gaps >= 1
+
+
+def test_geographic_analytics_realistic_mapping_and_data_completeness(db_session: Session):
+    """Verifies that geographic analysis uses genuine patient districts and reflects real profile completeness."""
+    org, admin = _setup_org_and_admin(db_session)
+
+    # Patient in Al Ain
+    p_ain = PersonService.register_person(
+        db=db_session,
+        first_name="Hamdan",
+        last_name="Al Ameri",
+        date_of_birth=date.today() - timedelta(days=365 * 30),
+        gender=Gender.MALE,
+        organization_id=org.id,
+    )
+    p_ain.district = "Al Jimi, Al Ain"
+    p_ain.patient_profile.completeness_score = 0.85
+
+    # Patient in Al Dhafra
+    p_dhafra = PersonService.register_person(
+        db=db_session,
+        first_name="Mohamed",
+        last_name="Al Mazrouei",
+        date_of_birth=date.today() - timedelta(days=365 * 50),
+        gender=Gender.MALE,
+        organization_id=org.id,
+    )
+    p_dhafra.district = "Madinat Zayed, Al Dhafra"
+    p_dhafra.patient_profile.completeness_score = 0.70
+
+    # Patient in Abu Dhabi Central
+    p_central = PersonService.register_person(
+        db=db_session,
+        first_name="Shaikha",
+        last_name="Al Mansoori",
+        date_of_birth=date.today() - timedelta(days=365 * 25),
+        gender=Gender.FEMALE,
+        organization_id=org.id,
+    )
+    p_central.district = "Al Bateen, Abu Dhabi"
+    p_central.patient_profile.completeness_score = 0.90
+
+    db_session.commit()
+
+    # Verify region classification
+    assert PopulationAnalyticsService.classify_person_region(p_ain) == "AL_AIN"
+    assert PopulationAnalyticsService.classify_person_region(p_dhafra) == "AL_DHAFRA"
+    assert PopulationAnalyticsService.classify_person_region(p_central) == "AD_CENTRAL"
+
+    # Verify Equity Analytics data completeness calculation
+    equity = PopulationAnalyticsService.get_equity_analytics(db=db_session, organization_id=org.id)
+    assert equity.benchmark_region == "AD_CENTRAL"
+    assert "AD_CENTRAL" in equity.data_completeness_by_subgroup
+    assert "AL_AIN" in equity.data_completeness_by_subgroup
+    assert "AL_DHAFRA" in equity.data_completeness_by_subgroup
+
+    # Verify that completeness is truthful (not hardcoded 95.0)
+    assert equity.data_completeness_by_subgroup["AL_AIN"] == 85.0
+    assert equity.data_completeness_by_subgroup["AL_DHAFRA"] == 70.0
+    assert equity.data_completeness_by_subgroup["AD_CENTRAL"] >= 70.0
+

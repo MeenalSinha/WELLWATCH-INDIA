@@ -3,6 +3,17 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { apiClient, ApiError } from '@/lib/api';
 import {
+  saveOutboxOperation,
+  getOutboxOperations,
+  clearOutbox,
+  removeOutboxOperation,
+  cacheAssignmentPackage,
+  getCachedAssignmentPackage,
+  isAssignmentPackageExpired,
+  saveDeviceBinding,
+  getSavedDeviceBinding,
+} from '@/lib/offlineStorage';
+import {
   OfflinePatientSummary,
   OfflineAssignmentPackageResponse,
   OfflineSyncBatchRequest,
@@ -16,6 +27,7 @@ function ChwWorkspaceContent() {
   const [deviceId, setDeviceId] = useState<string>('CHW-DEV-001');
   const [isDeviceRegistered, setIsDeviceRegistered] = useState<boolean>(true);
   const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [isExpiredCache, setIsExpiredCache] = useState<boolean>(false);
 
   // Assignment data
   const [assignmentPkg, setAssignmentPkg] = useState<OfflineAssignmentPackageResponse | null>(null);
@@ -28,7 +40,7 @@ function ChwWorkspaceContent() {
   const [bmi, setBmi] = useState<number>(23.5);
   const [notes, setNotes] = useState<string>('Routine community field screening.');
 
-  // Outbox queue (stored in state / local storage simulation for field use)
+  // Outbox queue (durable IndexedDB persistence for offline field use)
   const [outbox, setOutbox] = useState<OfflineSyncOperationRequest[]>([]);
   const [syncResults, setSyncResults] = useState<OfflineSyncBatchResponse | null>(null);
   const [conflicts, setConflicts] = useState<SyncConflictResponse[]>([]);
@@ -43,23 +55,87 @@ function ChwWorkspaceContent() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    loadAssignments();
-    loadConflicts();
+    // Network status listener
+    if (typeof window !== 'undefined') {
+      setIsOnline(navigator.onLine);
+      const onOnline = () => setIsOnline(true);
+      const onOffline = () => setIsOnline(false);
+      window.addEventListener('online', onOnline);
+      window.addEventListener('offline', onOffline);
+
+      // Load durable offline state
+      initDurableState();
+
+      return () => {
+        window.removeEventListener('online', onOnline);
+        window.removeEventListener('offline', onOffline);
+      };
+    } else {
+      initDurableState();
+    }
   }, []);
+
+  const initDurableState = async () => {
+    // 1. Restore device binding
+    try {
+      const dev = await getSavedDeviceBinding();
+      if (dev) {
+        setDeviceId(dev.deviceId);
+        setIsDeviceRegistered(dev.isRegistered);
+      }
+    } catch (e) {
+      console.warn('Device binding restore note:', e);
+    }
+
+    // 2. Restore pending offline outbox operations from IndexedDB
+    try {
+      const storedOps = await getOutboxOperations();
+      setOutbox(storedOps);
+    } catch (e) {
+      console.warn('Outbox restore note:', e);
+    }
+
+    // 3. Load assignments (try cached first, then live if online)
+    await loadAssignments();
+    await loadConflicts();
+  };
 
   const loadAssignments = async () => {
     setIsLoading(true);
     setError(null);
+
+    // Check cached package first
+    try {
+      const cached = await getCachedAssignmentPackage();
+      if (cached) {
+        setAssignmentPkg(cached);
+        const expired = isAssignmentPackageExpired(cached, 72);
+        setIsExpiredCache(expired);
+        if (cached.assigned_patients.length > 0 && !selectedPatient) {
+          setSelectedPatient(cached.assigned_patients[0]);
+        }
+      }
+    } catch (e) {
+      console.warn('Cached package check note:', e);
+    }
+
+    // Attempt live fetch if online
     try {
       const pkg = await apiClient.getOfflineAssignments(72);
       setAssignmentPkg(pkg);
+      setIsExpiredCache(false);
+      await cacheAssignmentPackage(pkg);
       if (pkg.assigned_patients.length > 0 && !selectedPatient) {
         setSelectedPatient(pkg.assigned_patients[0]);
       }
     } catch (err: any) {
-      console.warn('Assignment load note:', err);
-      // Offline fallback: if network is down, continue with existing local state
-      setError(err instanceof ApiError ? err.message : 'Working in offline mode or unable to fetch server assignments.');
+      console.warn('Live assignment load note:', err);
+      // If offline and have cached package, stay on cached
+      if (assignmentPkg) {
+        setError('Working with locally cached offline cohort (Network unavailable).');
+      } else {
+        setError(err instanceof ApiError ? err.message : 'Working in offline mode or unable to fetch server assignments.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -84,19 +160,24 @@ function ChwWorkspaceContent() {
         app_version: '1.0.0',
       });
       setIsDeviceRegistered(true);
+      await saveDeviceBinding(deviceId, true);
       setSuccessMessage(`Device ${deviceId} registered successfully.`);
     } catch (err: any) {
       setError(err instanceof ApiError ? err.message : 'Failed to register field device.');
     }
   };
 
-  const handleAddToOutbox = () => {
+  const handleAddToOutbox = async () => {
     if (!selectedPatient) {
       setError('Please select an assigned patient.');
       return;
     }
 
-    const opId = `OP-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    // Cryptographically secure UUID generation for operation identity
+    const uuidPart = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID().slice(0, 8)
+      : Date.now().toString(36);
+    const opId = `OP-${Date.now()}-${uuidPart}`;
     const idempKey = `IDEMP-${selectedPatient.patient_id}-${Date.now()}`;
 
     const newOp: OfflineSyncOperationRequest = {
@@ -116,8 +197,10 @@ function ChwWorkspaceContent() {
       },
     };
 
+    // Durable persistence in IndexedDB outbox
+    await saveOutboxOperation(newOp);
     setOutbox((prev) => [...prev, newOp]);
-    setSuccessMessage(`Screening for ${selectedPatient.full_name} saved to offline outbox.`);
+    setSuccessMessage(`Screening for ${selectedPatient.full_name} saved to durable offline outbox.`);
     setActiveTab('outbox');
   };
 
@@ -139,7 +222,18 @@ function ChwWorkspaceContent() {
     try {
       const res = await apiClient.syncOfflineBatch(batchReq);
       setSyncResults(res);
-      setOutbox([]); // Clear successfully synced operations
+
+      // Clean up successfully synced operations from IndexedDB
+      for (const result of res.results) {
+        if (result.status === 'SYNCED') {
+          await removeOutboxOperation(result.operation_id);
+        }
+      }
+
+      // Reload remaining operations from IndexedDB
+      const remaining = await getOutboxOperations();
+      setOutbox(remaining);
+
       setSuccessMessage(
         `Sync completed: ${res.synced_count} synced, ${res.conflict_count} conflicts detected, ${res.rejected_count} rejected.`
       );
@@ -189,7 +283,14 @@ function ChwWorkspaceContent() {
         </div>
 
         {/* Connectivity & Device Control */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 bg-gray-50 border rounded-md px-3 py-1.5 text-xs">
+            <span className="font-semibold text-gray-600">Storage:</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-teal-100 text-teal-800">
+              IndexedDB Persistent
+            </span>
+          </div>
+
           <div className="flex items-center gap-2 bg-gray-50 border rounded-md px-3 py-1.5 text-xs">
             <span className="font-semibold text-gray-600">Network:</span>
             <span
@@ -213,6 +314,15 @@ function ChwWorkspaceContent() {
           </div>
         </div>
       </div>
+
+      {isExpiredCache && (
+        <div className="rounded-md bg-amber-50 p-4 text-sm text-amber-800 border border-amber-300 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">POLICY WARNING:</span>
+            <span>Offline assignment cache duration has exceeded 72 hours. Reconnection and fresh cohort download are required per DoH Offline Operations Policy.</span>
+          </div>
+        </div>
+      )}
 
       {/* Safety Notice: No Silent Overwrites */}
       <div className="rounded-md bg-emerald-50 p-4 border border-emerald-200">
