@@ -64,6 +64,25 @@ alembic -c backend/alembic.ini upgrade head
 docker compose -f docker-compose.prod.yml up -d --remove-orphans
 ```
 
+### Tier 4: Google Cloud Platform Serverless Deployment (Cloud Run)
+Complete cloud-native deployment using Google Cloud Run for both Backend (FastAPI) and Frontend (Next.js 14):
+```powershell
+# Windows PowerShell automated deployment
+.\deploy-gcp.ps1 -ProjectId <YOUR_GCP_PROJECT_ID> -Region asia-south1
+```
+```bash
+# Linux / macOS / Cloud Shell automated deployment
+./deploy-gcp.sh <YOUR_GCP_PROJECT_ID> asia-south1
+```
+*See [GCP Deployment Guide](docs/GCP_DEPLOYMENT_GUIDE.md) for complete details.*
+
+### Tier 5: Render Free Tier Deployment (100% Free - $0/mo)
+Deploy the full stack (FastAPI Backend, Next.js 14 Frontend, PostgreSQL 16) on Render with 1 click using Render Blueprints:
+1. Push changes to GitHub (`git push origin main`).
+2. Go to **Render Dashboard** -> **New +** -> **Blueprint**.
+3. Select `MeenalSinha/WELLWATCH-INDIA` and click **Apply**.
+*See [Render Deployment Guide](docs/RENDER_DEPLOYMENT_GUIDE.md) and [render.yaml](render.yaml) for complete details.*
+
 ---
 
 ## 3. Disaster Recovery & Automated Snapshots

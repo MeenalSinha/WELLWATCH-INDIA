@@ -58,7 +58,24 @@ import {
 } from '@/types';
 import { getStoredToken, getStoredRefreshToken, setSession, clearSession } from './auth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+function getApiBaseUrl(): string {
+  let url = process.env.NEXT_PUBLIC_API_URL;
+  if (url) {
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `https://${url}`;
+    }
+    if (!url.endsWith('/api/v1')) {
+      url = `${url.replace(/\/+$/, '')}/api/v1`;
+    }
+    return url;
+  }
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/api/v1`;
+  }
+  return 'http://127.0.0.1:8000/api/v1';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 export class ApiError extends Error {
   status: number;

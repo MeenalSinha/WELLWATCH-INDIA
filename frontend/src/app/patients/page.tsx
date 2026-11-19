@@ -252,7 +252,7 @@ export default function PatientsPage() {
                 </thead>
                 <tbody>
                   {patients.map((p) => {
-                    const pct = Math.round(p.completeness_score * 100);
+                    const pct = p.completeness_score > 1 ? Math.round(p.completeness_score) : Math.round((p.completeness_score || 0) * 100);
                     return (
                       <tr key={p.id}>
                         <td>

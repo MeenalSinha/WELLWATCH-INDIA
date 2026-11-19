@@ -1,0 +1,68 @@
+# ==============================================================================
+# WELLWATCH PREVENT — Render Blueprint Configuration (Infrastructure-as-Code)
+# Target Tier: Render Free Tier ($0/month)
+# Docs: https://render.com/docs/blueprint-spec
+# ==============================================================================
+version: "1"
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Backend Web Service (FastAPI Engine)
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: wellwatch-backend
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install --upgrade pip && pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ENVIRONMENT
+        value: staging
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: wellwatch-db
+          property: connectionString
+      - key: BACKEND_CORS_ORIGINS
+        value: '["*"]'
+
+  # ----------------------------------------------------------------------------
+  # 2. Frontend Web Service (Next.js 14 App Router)
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: wellwatch-frontend
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: INTERNAL_BACKEND_URL
+        fromService:
+          type: web
+          name: wellwatch-backend
+          property: host
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: wellwatch-backend
+          property: host
+
+databases:
+  # ----------------------------------------------------------------------------
+  # 3. Managed PostgreSQL 16 Database (Free Tier)
+  # ----------------------------------------------------------------------------
+  - name: wellwatch-db
+    databaseName: wellwatch_prevent
+    user: wellwatch_user
+    plan: free
+    region: oregon

@@ -1,0 +1,95 @@
+steps:
+  # 1. Build Backend Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/wellwatch-backend:$COMMIT_SHA'
+      - '-t'
+      - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/wellwatch-backend:latest'
+      - '-f'
+      - 'infrastructure/docker/Dockerfile.backend'
+      - '.'
+    id: 'build-backend'
+
+  # 2. Push Backend Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/wellwatch-backend'
+    id: 'push-backend'
+
+  # 3. Deploy Backend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'wellwatch-backend'
+      - '--image'
+      - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/wellwatch-backend:latest'
+      - '--region'
+      - '$_LOCATION'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8000'
+      - '--set-env-vars'
+      - 'ENVIRONMENT=staging,SECRET_KEY=$_SECRET_KEY'
+    id: 'deploy-backend'
+
+  # 4. Build Frontend Image with Backend URL
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=$_BACKEND_URL/api/v1'
+      - '-t'
+      - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/wellwatch-frontend:$COMMIT_SHA'
+      - '-t'
+      - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/wellwatch-frontend:latest'
+      - '-f'
+      - 'infrastructure/docker/Dockerfile.frontend'
+      - '.'
+    id: 'build-frontend'
+
+  # 5. Push Frontend Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/wellwatch-frontend'
+    id: 'push-frontend'
+
+  # 6. Deploy Frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'wellwatch-frontend'
+      - '--image'
+      - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/wellwatch-frontend:latest'
+      - '--region'
+      - '$_LOCATION'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '3000'
+    id: 'deploy-frontend'
+
+substitutions:
+  _LOCATION: 'asia-south1'
+  _REPO_NAME: 'wellwatch-repo'
+  _SECRET_KEY: 'wellwatch-prevent-cloud-run-production-ready-secret-key-32'
+  _BACKEND_URL: ''
+
+images:
+  - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/wellwatch-backend:latest'
+  - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/wellwatch-frontend:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

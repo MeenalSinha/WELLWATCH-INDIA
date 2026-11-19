@@ -297,12 +297,19 @@ export default function PathwaysPage() {
                   Eligibility Criteria &amp; Decision Rationales:
                 </h4>
                 <ul className="text-xs space-y-1">
-                  {evaluationResult.eligibility.reasons.map((r, idx) => (
-                    <li key={idx} className="text-slate-700 flex items-center gap-2">
+                  {Array.isArray(evaluationResult.eligibility?.reasons) ? (
+                    evaluationResult.eligibility.reasons.map((r: string, idx: number) => (
+                      <li key={idx} className="text-slate-700 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-forest-700 flex-shrink-0" />
+                        <span>{r}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-slate-700 flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-forest-700 flex-shrink-0" />
-                      <span>{r}</span>
+                      <span>{(evaluationResult.eligibility as any)?.explanation || 'Protocol evaluated against clinical criteria.'}</span>
                     </li>
-                  ))}
+                  )}
                 </ul>
               </div>
 
@@ -324,14 +331,17 @@ export default function PathwaysPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {evaluationResult.care_gaps.map((g) => (
+                        {evaluationResult.care_gaps.map((g: any) => (
                           <tr key={g.milestone_id}>
-                            <td className="font-semibold text-slate-900">{g.name}</td>
-                            <td>{g.category}</td>
+                            <td className="font-semibold text-slate-900">
+                              <div>{g.milestone_name || g.name}</div>
+                              <span className="font-mono text-[10px] text-slate-400">{g.milestone_id}</span>
+                            </td>
+                            <td>{g.category || 'Screening Protocol'}</td>
                             <td>
                               <span
                                 className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                                  g.status === 'OVERDUE'
+                                  g.status === 'OVERDUE' || g.status === 'POTENTIALLY_OVERDUE'
                                     ? 'bg-rose-50 text-rose-800 border-rose-200'
                                     : g.status === 'DUE'
                                     ? 'bg-amber-50 text-amber-800 border-amber-200'
@@ -340,11 +350,13 @@ export default function PathwaysPage() {
                                     : 'bg-slate-100 text-slate-700 border-slate-200'
                                 }`}
                               >
-                                {g.status}
+                                {g.status.replace(/_/g, ' ')}
                               </span>
                             </td>
-                            <td className="font-mono text-slate-600">{g.due_date}</td>
-                            <td className="text-slate-500">{g.clinical_guideline}</td>
+                            <td className="font-mono text-slate-600 text-xs">
+                              {g.due_date || (g.status === 'DUE' ? 'Target Window (18m)' : 'Scheduled')}
+                            </td>
+                            <td className="text-slate-600 text-xs max-w-xs">{g.reason || g.clinical_guideline}</td>
                           </tr>
                         ))}
                       </tbody>

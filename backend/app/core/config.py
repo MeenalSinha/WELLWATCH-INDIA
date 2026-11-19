@@ -54,6 +54,19 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+    @field_validator("BACKEND_CORS_ORIGINS", "ALLOWED_HOSTS", mode="before")
+    def parse_cors_and_hosts(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("[") and v.endswith("]"):
+                import json
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [x.strip() for x in v.split(",") if x.strip()]
+        return v
+
     @field_validator("SECRET_KEY")
     def validate_secret_key(cls, v: str, info) -> str:
         if len(v) < 32:
