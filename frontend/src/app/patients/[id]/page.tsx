@@ -253,44 +253,40 @@ export default function PatientDetailPage() {
           <div className="border-b border-slate-200/80 px-6 pt-3 flex gap-6 overflow-x-auto text-xs font-medium">
             <button
               onClick={() => setActiveTab('profile')}
-              className={`pb-3.5 border-b-2 font-semibold flex items-center gap-2 transition ${
-                activeTab === 'profile'
-                  ? 'border-forest-700 text-forest-800'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
+              className={`pb-3.5 border-b-2 font-semibold flex items-center gap-2 transition ${activeTab === 'profile'
+                ? 'border-forest-700 text-forest-800'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
             >
               <Stethoscope className="w-4 h-4" />
               <span>Clinical Profile</span>
             </button>
             <button
               onClick={() => setActiveTab('timeline')}
-              className={`pb-3.5 border-b-2 font-semibold flex items-center gap-2 transition ${
-                activeTab === 'timeline'
-                  ? 'border-forest-700 text-forest-800'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
+              className={`pb-3.5 border-b-2 font-semibold flex items-center gap-2 transition ${activeTab === 'timeline'
+                ? 'border-forest-700 text-forest-800'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
             >
               <Clock className="w-4 h-4" />
               <span>Longitudinal Timeline ({timeline?.total_events || 0})</span>
             </button>
             <button
               onClick={() => setActiveTab('genomics')}
-              className={`pb-3.5 border-b-2 font-semibold flex items-center gap-2 transition ${
-                activeTab === 'genomics'
-                  ? 'border-forest-700 text-forest-800'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
+              className={`pb-3.5 border-b-2 font-semibold flex items-center gap-2 transition ${activeTab === 'genomics'
+                ? 'border-forest-700 text-forest-800'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
             >
               <Dna className="w-4 h-4" />
               <span>Genomic Intelligence ({genomics.length})</span>
             </button>
             <button
               onClick={() => setActiveTab('assessments')}
-              className={`pb-3.5 border-b-2 font-semibold flex items-center gap-2 transition ${
-                activeTab === 'assessments'
-                  ? 'border-forest-700 text-forest-800'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
+              className={`pb-3.5 border-b-2 font-semibold flex items-center gap-2 transition ${activeTab === 'assessments'
+                ? 'border-forest-700 text-forest-800'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
             >
               <ShieldAlert className="w-4 h-4" />
               <span>Risk Assessments ({assessments.length})</span>

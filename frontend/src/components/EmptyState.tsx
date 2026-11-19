@@ -1,12 +1,12 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
 
-interface EmptyStateAction {
+export interface EmptyStateAction {
   label: string;
   onClick: () => void;
 }
 
-interface EmptyStateProps {
+export interface EmptyStateProps {
   title: string;
   description: string;
   actionText?: string;
@@ -25,8 +25,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   icon: Icon,
   className = '',
 }) => {
-  const finalActionText = actionText || action?.label;
-  const finalOnAction = onAction || action?.onClick;
+  const btnLabel = action?.label || actionText;
+  const btnClick = action?.onClick || onAction;
 
   return (
     <div
@@ -47,12 +47,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       </div>
       <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
       <p className="text-xs text-slate-500 max-w-sm mt-1 mb-4 leading-relaxed">{description}</p>
-      {finalActionText && finalOnAction && (
+      {btnLabel && btnClick && (
         <button
-          onClick={finalOnAction}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-transparent text-xs font-semibold rounded-lg text-white bg-forest-800 hover:bg-forest-900 shadow-xs transition"
+          type="button"
+          onClick={btnClick}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-transparent text-xs font-semibold rounded-lg text-white bg-forest-800 hover:bg-forest-900 shadow-xs transition cursor-pointer"
         >
-          {finalActionText}
+          {btnLabel}
         </button>
       )}
     </div>

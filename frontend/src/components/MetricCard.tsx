@@ -1,7 +1,7 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
 
-interface MetricCardProps {
+export interface MetricCardProps {
   label?: string;
   title?: string;
   value: string | number;
@@ -9,8 +9,8 @@ interface MetricCardProps {
   subtitle?: string;
   trend?: string;
   trendDirection?: 'up' | 'down' | 'neutral';
-  icon?: LucideIcon | React.ComponentType<{ className?: string }>;
-  variant?: 'default' | 'forest' | 'amber' | 'blue' | 'emerald' | 'teal';
+  icon?: LucideIcon | any;
+  variant?: 'default' | 'forest' | 'emerald' | 'teal' | 'amber' | 'blue' | 'rose';
   className?: string;
 }
 
@@ -26,51 +26,50 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   variant = 'default',
   className = '',
 }) => {
-  const displayLabel = title || label || '';
+  const displayLabel = label || title || '';
 
   // Border accent tinting
-  const variantStyles = {
+  const variantStyles: Record<string, string> = {
     default: 'hover:border-slate-300',
     forest: 'border-l-4 border-l-forest-700',
     emerald: 'border-l-4 border-l-emerald-600',
     teal: 'border-l-4 border-l-teal-600',
     amber: 'border-l-4 border-l-amber-500',
     blue: 'border-l-4 border-l-sky-600',
-  }[variant] || 'hover:border-slate-300';
+    rose: 'border-l-4 border-l-rose-500',
+  };
+
+  const borderStyle = variantStyles[variant] || variantStyles.default;
 
   return (
     <div
-      className={`card-healthcare p-5 flex flex-col justify-between transition-all duration-150 hover:shadow-md ${variantStyles} ${className}`}
+      className={`bg-white p-5 rounded-xl border border-slate-200/90 shadow-xs hover:shadow-sm transition-all duration-150 ${borderStyle} ${className}`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider line-clamp-1">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
           {displayLabel}
         </span>
         {Icon && (
-          <div className="w-8 h-8 rounded-lg bg-forest-50/80 border border-forest-100 flex items-center justify-center text-forest-800 shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600">
             <Icon className="w-4 h-4 text-forest-700" />
           </div>
         )}
       </div>
 
-      <div className="mt-3 flex items-baseline gap-1.5">
-        <span className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-sans">
-          {value}
-        </span>
+      <div className="mt-2.5 flex items-baseline gap-1.5">
+        <span className="text-2xl font-bold tracking-tight text-slate-900">{value}</span>
         {unit && <span className="text-xs font-medium text-slate-500">{unit}</span>}
       </div>
 
       {(subtitle || trend) && (
-        <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
-          {subtitle && <span className="text-slate-500 line-clamp-1">{subtitle}</span>}
+        <div className="mt-2.5 pt-2 border-t border-slate-100/80 text-[11px] text-slate-500 flex items-center justify-between gap-1">
+          {subtitle && <span className="truncate">{subtitle}</span>}
           {trend && (
             <span
-              className={`font-semibold shrink-0 ${
+              className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${
                 trendDirection === 'down'
-                  ? 'text-rose-700'
-                  : trendDirection === 'neutral'
-                  ? 'text-slate-600'
-                  : 'text-emerald-700'
+                  ? 'bg-rose-50 text-rose-700'
+                  : 'bg-emerald-50 text-emerald-700'
               }`}
             >
               {trend}
