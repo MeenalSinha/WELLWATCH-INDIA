@@ -181,34 +181,34 @@ export default function DashboardPage() {
               />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#F8FAF9] text-slate-600 font-semibold border-b border-slate-200 text-[11px] uppercase tracking-wider">
+                <table className="table-healthcare">
+                  <thead>
                     <tr>
-                      <th className="py-2.5 px-3">Date</th>
-                      <th className="py-2.5 px-3">Encounter Type</th>
-                      <th className="py-2.5 px-3">Blood Pressure</th>
-                      <th className="py-2.5 px-3">Glucose</th>
-                      <th className="py-2.5 px-3">BMI</th>
-                      <th className="py-2.5 px-3">Epistemic Status</th>
+                      <th>Date</th>
+                      <th>Encounter Type</th>
+                      <th>Blood Pressure</th>
+                      <th>Glucose</th>
+                      <th>BMI</th>
+                      <th>Epistemic Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {screenings.slice(0, 6).map((s) => (
                       <tr key={s.id} className="hover:bg-slate-50/80 transition">
-                        <td className="py-2.5 px-3 font-mono text-slate-500">
+                        <td className="font-mono text-slate-500">
                           {new Date(s.encounter_date || s.created_at).toLocaleDateString()}
                         </td>
-                        <td className="py-2.5 px-3 font-medium text-slate-900">
+                        <td className="font-medium text-slate-900">
                           {s.encounter_type.replace(/_/g, ' ')}
                         </td>
-                        <td className="py-2.5 px-3">
+                        <td>
                           {s.systolic_bp && s.diastolic_bp ? `${s.systolic_bp}/${s.diastolic_bp} mmHg` : '—'}
                         </td>
-                        <td className="py-2.5 px-3 font-mono">
+                        <td className="font-mono">
                           {s.fasting_glucose ? `${s.fasting_glucose} mg/dL` : '—'}
                         </td>
-                        <td className="py-2.5 px-3 font-semibold text-slate-800">{s.bmi || '—'}</td>
-                        <td className="py-2.5 px-3">
+                        <td className="font-semibold text-slate-800">{s.bmi || '—'}</td>
+                        <td>
                           <StatusBadge status={s.epistemic_status} />
                         </td>
                       </tr>

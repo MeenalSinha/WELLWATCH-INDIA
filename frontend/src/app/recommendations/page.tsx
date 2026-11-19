@@ -325,73 +325,85 @@ function RecommendationsContent() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="table-healthcare text-xs">
+              <table className="table-healthcare">
                 <thead>
                   <tr>
-                    <th>Category &amp; Rule</th>
-                    <th>Recommended Clinical Action</th>
-                    <th>Priority</th>
-                    <th>Lifecycle State</th>
-                    <th>Target Window</th>
-                    <th className="text-right">Physician Actions</th>
+                    <th className="w-52 pl-6">Category &amp; Rule</th>
+                    <th className="min-w-[280px]">Recommended Action</th>
+                    <th className="w-28">Priority</th>
+                    <th className="w-44">Lifecycle State</th>
+                    <th className="w-36">Target Window</th>
+                    <th className="w-56 text-right pr-6">Physician Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                   {recommendations.map((rec) => (
-                    <tr key={rec.id}>
-                      <td>
-                        <span className="font-semibold text-slate-900 block">
-                          {rec.category.replace(/_/g, ' ')}
+                    <tr key={rec.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="pl-6 align-top py-4">
+                        <span className="font-semibold text-slate-800 text-xs block leading-tight">
+                          {rec.category.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
                         </span>
-                        <span className="font-mono text-[11px] text-slate-400">
+                        <span className="inline-block mt-1.5 font-mono text-[10px] text-slate-500 bg-slate-100/80 px-2 py-0.5 rounded border border-slate-200">
                           {rec.rule_id}
                         </span>
                       </td>
-                      <td className="max-w-md">
-                        <p className="font-semibold text-slate-900">{rec.recommended_action}</p>
-                        <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                      <td className="align-top py-4 max-w-md pr-4">
+                        <p className="font-semibold text-slate-900 text-xs leading-snug">
+                          {rec.recommended_action}
+                        </p>
+                        <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-relaxed">
                           {rec.clinical_rationale}
                         </p>
                       </td>
-                      <td>
+                      <td className="align-top py-4 whitespace-nowrap">
                         <StatusBadge status={rec.priority} />
                       </td>
-                      <td>
+                      <td className="align-top py-4 whitespace-nowrap">
                         <StatusBadge status={rec.lifecycle_status} />
                       </td>
-                      <td className="font-mono text-slate-600">
-                        {rec.target_date
-                          ? new Date(rec.target_date).toLocaleDateString()
-                          : 'Immediate'}
+                      <td className="align-top py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>
+                            {rec.target_date
+                              ? new Date(rec.target_date).toLocaleDateString()
+                              : 'Immediate'}
+                          </span>
+                        </div>
                       </td>
-                      <td className="text-right space-x-2 whitespace-nowrap">
-                        <button
-                          onClick={() => handleViewExplanation(rec)}
-                          className="px-2.5 py-1 text-xs font-semibold rounded bg-forest-50 text-forest-800 hover:bg-forest-100 border border-forest-200 transition"
-                        >
-                          Explain
-                        </button>
-                        {rec.lifecycle_status === 'PENDING_CLINICAL_REVIEW' && (
+                      <td className="align-top py-4 pr-6 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleViewExplanation(rec)}
+                            className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white text-slate-700 hover:text-forest-800 hover:bg-forest-50 border border-slate-200 shadow-2xs transition"
+                            title="View governed clinical explanation and trigger rule"
+                          >
+                            Explain
+                          </button>
+                          {rec.lifecycle_status === 'PENDING_CLINICAL_REVIEW' && (
+                            <button
+                              onClick={() => {
+                                setSelectedRec(rec);
+                                setShowReviewModal(true);
+                              }}
+                              className="px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition"
+                              title="Clinical physician review sign-off"
+                            >
+                              Review
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               setSelectedRec(rec);
-                              setShowReviewModal(true);
+                              setTargetStatus('OFFERED');
+                              setShowStatusModal(true);
                             }}
-                            className="px-2.5 py-1 text-xs font-semibold rounded bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200 transition"
+                            className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/80 transition"
+                            title="Update recommendation workflow status"
                           >
-                            Review
+                            Status
                           </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            setSelectedRec(rec);
-                            setTargetStatus('OFFERED');
-                            setShowStatusModal(true);
-                          }}
-                          className="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition"
-                        >
-                          Status
-                        </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
