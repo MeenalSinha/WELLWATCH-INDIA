@@ -49,36 +49,36 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6">
+        <div className="flex items-center justify-between h-16 gap-2">
           {/* Brand Logo & Tagline */}
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-800 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-800 text-white flex items-center justify-center font-bold text-base shadow-sm shrink-0">
                 W
               </div>
-              <div>
-                <span className="text-base font-bold text-slate-900 tracking-tight">
+              <div className="leading-tight shrink-0">
+                <span className="text-sm font-bold text-slate-900 tracking-tight block">
                   WELLWATCH <span className="text-emerald-700">PREVENT</span>
                 </span>
-                <span className="block text-[10px] text-slate-500 font-medium tracking-wider uppercase">
-                  Life-Course Preventive Care Intelligence
+                <span className="block text-[9px] text-slate-500 font-medium tracking-wider uppercase">
+                  Life-Course Preventive Care
                 </span>
               </div>
             </Link>
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden lg:flex items-center space-x-0.5 overflow-x-auto py-1 scrollbar-none">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
                     isActive
-                      ? 'bg-slate-100 text-slate-900 font-semibold'
+                      ? 'bg-slate-100 text-slate-900 font-semibold shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
@@ -89,18 +89,20 @@ export const Navbar: React.FC = () => {
           </nav>
 
           {/* User Status / Auth CTA */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             {user ? (
-              <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <div className="text-xs font-semibold text-slate-900">{user.full_name}</div>
+              <div className="flex items-center gap-2.5">
+                <div className="text-right hidden sm:block shrink-0">
+                  <div className="text-xs font-semibold text-slate-900 max-w-[160px] truncate" title={user.full_name}>
+                    {user.full_name}
+                  </div>
                   <div className="mt-0.5">
                     <StatusBadge status={user.role} />
                   </div>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="text-xs text-rose-700 hover:text-rose-900 font-medium px-2.5 py-1.5 rounded border border-rose-200 hover:bg-rose-50 transition"
+                  className="text-xs text-rose-700 hover:text-rose-900 font-medium px-2.5 py-1.5 rounded border border-rose-200 hover:bg-rose-50 transition whitespace-nowrap"
                 >
                   Sign Out
                 </button>
@@ -108,7 +110,7 @@ export const Navbar: React.FC = () => {
             ) : (
               <Link
                 href="/login"
-                className="text-xs text-white bg-emerald-800 hover:bg-emerald-900 font-medium px-4 py-2 rounded-md shadow-sm transition"
+                className="text-xs text-white bg-emerald-800 hover:bg-emerald-900 font-medium px-4 py-2 rounded-md shadow-sm transition whitespace-nowrap"
               >
                 Sign In
               </Link>
